@@ -23,7 +23,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import java.util.regex.Pattern;
 
-class MediaType {
+final class MediaType {
 
     private static final String DEFAULT_MIME_TYPE = "text/plain"; //$NON-NLS-1$
     private static final String DEFAULT_CHARSET = "US-ASCII"; //$NON-NLS-1$
@@ -116,8 +116,7 @@ class MediaType {
         Map<String, String> parameters = new LinkedHashMap<>();
 
         int start = 0;
-        while (start < paramString.length())
-        {
+        while (start < paramString.length()) {
            start = parseNextParameter(paramString, start, parameters);
         }
 
