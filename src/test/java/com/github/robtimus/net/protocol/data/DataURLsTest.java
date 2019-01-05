@@ -21,6 +21,8 @@ import static org.hamcrest.Matchers.instanceOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -30,6 +32,7 @@ import java.util.Random;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
+import com.github.robtimus.net.protocol.data.DataURLs.Base64Appender;
 
 @SuppressWarnings({ "nls", "javadoc" })
 public class DataURLsTest {
@@ -473,5 +476,51 @@ public class DataURLsTest {
         assertEquals(-1, url.getDefaultPort());
         assertNull(url.getHost());
         assertNull(url.getRef());
+    }
+
+    @Test
+    public void testBase64AppenderWriteByte() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        StringBuilder expected = new StringBuilder();
+        try (OutputStream appender = new Base64Appender(sb)) {
+            for (byte b = 'A'; b <= 'Z'; b++) {
+                appender.write(b);
+                expected.append((char) b);
+            }
+        }
+        assertEquals(expected.toString(), sb.toString());
+    }
+
+    @Test
+    public void testBase64AppenderWriteArray() throws IOException {
+        StringBuilder sb = new StringBuilder();
+        StringBuilder expected = new StringBuilder();
+        try (OutputStream appender = new Base64Appender(sb)) {
+            // equal buffer sizes
+            byte[] buffer = new byte[1024];
+            fill(buffer, expected);
+            appender.write(buffer);
+
+            // smaller buffer size
+            buffer = new byte[512];
+            fill(buffer, expected);
+            appender.write(buffer);
+
+            // larger buffer size
+            buffer = new byte[5632];
+            fill(buffer, expected);
+            appender.write(buffer);
+        }
+        assertEquals(expected.toString(), sb.toString());
+    }
+
+    private static final Random RANDOM = new Random();
+
+    private void fill(byte[] buffer, StringBuilder expected) {
+        for (int i = 0; i < buffer.length; i++) {
+            int c = RANDOM.nextInt(26) + 'A';
+            buffer[i] = (byte) c;
+            expected.append((char) c);
+        }
     }
 }

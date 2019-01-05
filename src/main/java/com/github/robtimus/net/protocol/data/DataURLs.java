@@ -17,9 +17,11 @@
 
 package com.github.robtimus.net.protocol.data;
 
-import java.io.ByteArrayOutputStream;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.Reader;
 import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
@@ -29,7 +31,6 @@ import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -79,21 +80,7 @@ public final class DataURLs {
      */
     public static Builder.FromText builder(Reader data) {
         Objects.requireNonNull(data);
-        return new Builder.FromText(consumer(data));
-    }
-
-    private static Consumer<StringBuilder> consumer(Reader data) {
-        return sb -> {
-            char[] buffer = new char[4096];
-            int len;
-            try {
-                while ((len = data.read(buffer)) != -1) {
-                    sb.append(buffer, 0, len);
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-        };
+        return new Builder.FromText(sb -> copyData(data, sb));
     }
 
     /**
@@ -104,11 +91,7 @@ public final class DataURLs {
      */
     public static Builder.FromBytes builder(byte[] data) {
         Objects.requireNonNull(data);
-
-        Supplier<byte[]> dataSupplier = () -> data;
-        BiConsumer<StringBuilder, Charset> dataAppender = (sb, charset) -> sb.append(new String(data, charset));
-
-        return new Builder.FromBytes(dataSupplier, dataAppender);
+        return new Builder.FromBytes(() -> new ByteArrayInputStream(data));
     }
 
     /**
@@ -122,31 +105,31 @@ public final class DataURLs {
      */
     public static Builder.FromBytes builder(InputStream data) {
         Objects.requireNonNull(data);
+        return new Builder.FromBytes(() -> data);
+    }
 
-        class ByteArrayOutputStreamWithCharset extends ByteArrayOutputStream {
-            public String toString(Charset charset) {
-                return new String(buf, 0, count, charset);
+    private static void copyData(Reader data, StringBuilder dest) {
+        char[] buffer = new char[4096];
+        int len;
+        try {
+            while ((len = data.read(buffer)) != -1) {
+                dest.append(buffer, 0, len);
             }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
+    }
 
-        Supplier<ByteArrayOutputStreamWithCharset> streamSupplier = () -> {
-            byte[] buffer = new byte[4096];
-            int len;
-            ByteArrayOutputStreamWithCharset output = new ByteArrayOutputStreamWithCharset();
-            try {
-                while ((len = data.read(buffer)) != -1) {
-                    output.write(buffer, 0, len);
-                }
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
+    private static void copyData(InputStream data, OutputStream dest) {
+        byte[] buffer = new byte[4096];
+        int len;
+        try {
+            while ((len = data.read(buffer)) != -1) {
+                dest.write(buffer, 0, len);
             }
-            return output;
-        };
-
-        Supplier<byte[]> dataSupplier = () -> streamSupplier.get().toByteArray();
-        BiConsumer<StringBuilder, Charset> dataAppender = (sb, charset) -> sb.append(streamSupplier.get().toString(charset));
-
-        return new Builder.FromBytes(dataSupplier, dataAppender);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     /**
@@ -224,13 +207,11 @@ public final class DataURLs {
          */
         public static final class FromBytes extends Builder {
 
-            private final Supplier<byte[]> dataSupplier;
-            private final BiConsumer<StringBuilder, Charset> dataAppender;
+            private final Supplier<InputStream> dataSupplier;
             private boolean base64Data;
 
-            private FromBytes(Supplier<byte[]> dataSupplier, BiConsumer<StringBuilder, Charset> dataAppender) {
+            private FromBytes(Supplier<InputStream> dataSupplier) {
                 this.dataSupplier = dataSupplier;
-                this.dataAppender = dataAppender;
                 base64Data = true;
             }
 
@@ -255,10 +236,17 @@ public final class DataURLs {
                 if (base64Data) {
                     file.append(Handler.BASE64_POSTFIX);
                     file.append(',');
-                    file.append(new String(Base64.getEncoder().encode(dataSupplier.get()), charset));
+                    try (OutputStream appender = new Base64Appender(file);
+                            OutputStream dest = Base64.getEncoder().wrap(appender)) {
+
+                        copyData(dataSupplier.get(), dest);
+                    } catch (IOException e) {
+                        throw new UncheckedIOException(e);
+                    }
                 } else {
                     file.append(',');
-                    dataAppender.accept(file, charset);
+                    Reader data = new InputStreamReader(dataSupplier.get(), charset);
+                    copyData(data, file);
                 }
 
                 return createURL(file.toString());
@@ -322,6 +310,49 @@ public final class DataURLs {
                 MediaType mediaType = MediaType.create(mimeType, parameters);
                 return parent.build(mediaType);
             }
+        }
+    }
+
+    static final class Base64Appender extends OutputStream {
+
+        private final StringBuilder dest;
+        // lazy initialize the buffer; right now Base64 only uses write(int), but that may change
+        private char[] buffer;
+
+        Base64Appender(StringBuilder dest) {
+            this.dest = dest;
+        }
+
+        @Override
+        public void write(int b) throws IOException {
+            char c = convert(b);
+            dest.append(c);
+        }
+
+        @Override
+        public void write(byte[] b, int off, int len) throws IOException {
+            int offset = off;
+            int remaining = len;
+            while (remaining > 0) {
+                int n = convertToBuffer(b, offset, remaining);
+                dest.append(buffer, 0, n);
+                offset += n;
+                remaining -= n;
+            }
+        }
+
+        private char convert(int b) {
+            return (char) b;
+        }
+
+        private int convertToBuffer(byte[] b, int off, int len) {
+            if (buffer == null) {
+                buffer = new char[1024];
+            }
+            for (int i = off, j = 0; i < off + len && j < buffer.length; j++, i++) {
+                buffer[j] = convert(b[i]);
+            }
+            return Math.min(buffer.length, len);
         }
     }
 }
