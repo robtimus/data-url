@@ -123,6 +123,42 @@ public class MediaTypeTest {
     }
 
     @Test
+    public void testParseStartOnly() {
+        String type = "application/json";
+
+        MediaType mediaType = MediaType.parse(type + "!", 0, type.length());
+
+        assertEquals(type, mediaType.toString());
+        assertEquals(type, mediaType.getMimeType());
+        assertEquals(Collections.emptyMap(), mediaType.getParameters());
+        assertNull(mediaType.getCharset());
+    }
+
+    @Test
+    public void testParseEndOnly() {
+        String type = "application/json";
+
+        MediaType mediaType = MediaType.parse("!" + type, 1, type.length() + 1);
+
+        assertEquals(type, mediaType.toString());
+        assertEquals(type, mediaType.getMimeType());
+        assertEquals(Collections.emptyMap(), mediaType.getParameters());
+        assertNull(mediaType.getCharset());
+    }
+
+    @Test
+    public void testParseMiddleOnly() {
+        String type = "application/json";
+
+        MediaType mediaType = MediaType.parse("!" + type + "!", 1, type.length() + 1);
+
+        assertEquals(type, mediaType.toString());
+        assertEquals(type, mediaType.getMimeType());
+        assertEquals(Collections.emptyMap(), mediaType.getParameters());
+        assertNull(mediaType.getCharset());
+    }
+
+    @Test
     public void testParseEmptyParameters() {
         String type = "application/json";
 

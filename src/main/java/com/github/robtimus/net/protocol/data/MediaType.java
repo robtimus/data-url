@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class MediaType {
@@ -115,9 +114,39 @@ final class MediaType {
     private static final Pattern MIME_TYPE_PATTERN = Pattern.compile(TOKEN + "+/" + TOKEN + "+"); //$NON-NLS-1$ //$NON-NLS-2$
 
     private static void validateMimeType(String mimeType, int start, int end) {
-        Matcher matcher = MIME_TYPE_PATTERN.matcher(mimeType);
-        if (!matcher.find() || matcher.start() != start || matcher.end() != end) {
+        // Use a CharSequence wrapper to cap the limits of the mime type, to prevent the matcher from going out of bounds.
+        // This wrapper is used instead of mimeType.substring because that copies part of the mime type's contents.
+        CharSequence s = start == 0 && end == mimeType.length() ? mimeType : new SubString(mimeType, start, end);
+        if (!MIME_TYPE_PATTERN.matcher(s).matches()) {
             throw new IllegalArgumentException(Messages.mediaType.invalidMimeType.get(mimeType));
+        }
+    }
+
+    private static final class SubString implements CharSequence {
+
+        private final String s;
+        private final int offset;
+        private final int limit;
+
+        private SubString(String s, int offset, int limit) {
+            this.s = s;
+            this.offset = offset;
+            this.limit = limit;
+        }
+
+        @Override
+        public int length() {
+            return limit - offset;
+        }
+
+        @Override
+        public char charAt(int index) {
+            return s.charAt(index + offset);
+        }
+
+        @Override
+        public CharSequence subSequence(int start, int end) {
+            return s.substring(start + offset, end - offset);
         }
     }
 
