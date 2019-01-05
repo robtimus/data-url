@@ -53,7 +53,6 @@ public class Handler extends URLStreamHandler {
         MediaType mediaType = getMediaType(spec, start, indexOfComma);
         boolean base64Data = isBase64Data(spec, indexOfComma);
 
-        // ignore the data
         byte[] data = getData(spec, indexOfComma, limit, mediaType, base64Data);
 
         return new DataURLConnection(u, mediaType, data);
