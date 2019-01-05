@@ -37,6 +37,7 @@ public class Handler extends URLStreamHandler {
     public static final String PROTOCOL = "data"; //$NON-NLS-1$
 
     static final String BASE64_POSTFIX = ";base64"; //$NON-NLS-1$
+    private static final int BASE64_POSTFIX_LENGTH = BASE64_POSTFIX.length();
 
     /** {@inheritDoc} */
     @Override
@@ -96,16 +97,18 @@ public class Handler extends URLStreamHandler {
     }
 
     private MediaType getMediaType(String spec, int start, int indexOfComma) {
-        String mediaType = spec.substring(start, indexOfComma);
-        if (mediaType.endsWith(BASE64_POSTFIX)) {
-            mediaType = mediaType.substring(0, mediaType.length() - BASE64_POSTFIX.length()).trim();
+        int end = indexOfComma;
+        if (isBase64Data(spec, indexOfComma)) {
+            end -= BASE64_POSTFIX_LENGTH;
+            while (end > start && Character.isWhitespace(spec.charAt(end))) {
+                end--;
+            }
         }
-
-        return mediaType.isEmpty() ? MediaType.DEFAULT : MediaType.parse(mediaType);
+        return start == end ? MediaType.DEFAULT : MediaType.parse(spec, start, end);
     }
 
     private boolean isBase64Data(String spec, int indexOfComma) {
-        return spec.regionMatches(indexOfComma - BASE64_POSTFIX.length(), BASE64_POSTFIX, 0, BASE64_POSTFIX.length());
+        return spec.regionMatches(indexOfComma - BASE64_POSTFIX_LENGTH, BASE64_POSTFIX, 0, BASE64_POSTFIX_LENGTH);
     }
 
     private byte[] getData(String spec, int indexOfComma, int limit, MediaType mediaType, boolean base64Data) {

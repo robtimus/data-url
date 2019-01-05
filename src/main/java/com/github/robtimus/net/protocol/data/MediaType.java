@@ -21,6 +21,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 final class MediaType {
@@ -46,7 +47,7 @@ final class MediaType {
     }
 
     static MediaType create(String mimeType, Map<String, String> parameters) {
-        validateMimeType(mimeType);
+        validateMimeType(mimeType, 0, mimeType.length());
 
         String mediaType = buildMediaType(mimeType, parameters);
         return new MediaType(mediaType, mimeType, new LinkedHashMap<>(parameters));
@@ -85,56 +86,70 @@ final class MediaType {
     }
 
     static MediaType parse(String type) {
-        int index = type.indexOf(';');
-        if (index == -1) {
-            validateMimeType(type);
-            return new MediaType(type, type, Collections.<String, String>emptyMap());
+        return parse(type, 0, type.length());
+    }
+
+    static MediaType parse(String type, int start, int end) {
+        int index = type.indexOf(';', start);
+        if (isNotFound(index, end)) {
+            validateMimeType(type, start, end);
+            String mimeType = type.substring(start, end);
+            return new MediaType(mimeType, mimeType, Collections.emptyMap());
         }
 
-        String mimeType = type.substring(0, index).trim();
-        String paramString = type.substring(index + 1).trim();
+        int mimeTypeStart = start;
+        int mimeTypeEnd = index;
 
-        validateMimeType(mimeType);
-        Map<String, String> parameters = parseParameters(paramString);
+        validateMimeType(type, mimeTypeStart, mimeTypeEnd);
+
+        int paramStart = skipStartingWhitespace(type, index + 1, end);
+        int paramEnd = end;
+
+        Map<String, String> parameters = parseParameters(type, paramStart, paramEnd);
+        String mimeType = type.substring(mimeTypeStart, mimeTypeEnd);
+
         return new MediaType(type, mimeType, parameters);
     }
 
     private static final String TOKEN = "[\u0021-\u007e&&[^()<>@,;:\\\\\"/\\[\\]?=]]"; //$NON-NLS-1$
     private static final Pattern MIME_TYPE_PATTERN = Pattern.compile(TOKEN + "+/" + TOKEN + "+"); //$NON-NLS-1$ //$NON-NLS-2$
 
-    static void validateMimeType(String mimeType) {
-        if (!MIME_TYPE_PATTERN.matcher(mimeType).matches()) {
+    private static void validateMimeType(String mimeType, int start, int end) {
+        Matcher matcher = MIME_TYPE_PATTERN.matcher(mimeType);
+        if (!matcher.find() || matcher.start() != start || matcher.end() != end) {
             throw new IllegalArgumentException(Messages.mediaType.invalidMimeType.get(mimeType));
         }
     }
 
-    private static Map<String, String> parseParameters(String paramString) {
-        if (paramString.isEmpty()) {
+    private static Map<String, String> parseParameters(String paramString, int start, int end) {
+        if (start == end) {
             return Collections.emptyMap();
         }
 
         Map<String, String> parameters = new LinkedHashMap<>();
 
-        int start = 0;
-        while (start < paramString.length()) {
-           start = parseNextParameter(paramString, start, parameters);
+        int index = start;
+        while (index < end) {
+            index = parseNextParameter(paramString, index, end, parameters);
+            index = skipStartingWhitespace(paramString, index, end);
         }
 
         return parameters;
     }
 
-    private static int parseNextParameter(String paramString, int start, Map<String, String> parameters) {
+    private static int parseNextParameter(String paramString, int start, int end, Map<String, String> parameters) {
         boolean quote = false;
         boolean backslash = false;
 
-        int end = getNameEnd(paramString, start);
-        String name = paramString.substring(start, end).trim();
-        if (end < paramString.length() && paramString.charAt(end) == '=') {
-            end++;
+        int nameEnd = getNameEnd(paramString, start, end);
+        String name = paramString.substring(start, nameEnd);
+        int valueStart = nameEnd;
+        if (valueStart < end && paramString.charAt(valueStart) == '=') {
+            valueStart++;
         }
 
-        StringBuilder value = new StringBuilder(paramString.length() - end);
-        for (int i = end; i < paramString.length(); i++) {
+        StringBuilder value = new StringBuilder(end - valueStart);
+        for (int i = valueStart; i < end; i++) {
             char c = paramString.charAt(i);
 
             switch (c) {
@@ -156,7 +171,7 @@ final class MediaType {
                 break;
             case ';':
                 if (!quote) {
-                    parameters.put(name, value.toString().trim());
+                    parameters.put(name, value.toString());
                     return i + 1;
                 }
                 value.append(c);
@@ -166,23 +181,35 @@ final class MediaType {
                 break;
             }
         }
-        parameters.put(name, value.toString().trim());
-        return paramString.length();
+        parameters.put(name, value.toString());
+        return end;
     }
 
-    private static int getNameEnd(String params, int start) {
+    private static int getNameEnd(String params, int start, int end) {
         int indexOfEquals = params.indexOf('=', start);
         int indexOfSemicolon = params.indexOf(';', start);
-        if (indexOfEquals == -1 && indexOfSemicolon == -1) {
-            return params.length();
+        if (isNotFound(indexOfEquals, end) && isNotFound(indexOfSemicolon, end)) {
+            return end;
         }
-        if (indexOfEquals == -1) {
+        if (isNotFound(indexOfEquals, end)) {
             return indexOfSemicolon;
         }
-        if (indexOfSemicolon == -1) {
+        if (isNotFound(indexOfSemicolon, end)) {
             return indexOfEquals;
         }
         return Math.min(indexOfEquals, indexOfSemicolon);
+    }
+
+    private static boolean isNotFound(int index, int end) {
+        return index == -1 || index >= end;
+    }
+
+    private static int skipStartingWhitespace(String s, int index, int end) {
+        int i = index;
+        while (i < end && Character.isWhitespace(s.charAt(i))) {
+            i++;
+        }
+        return i;
     }
 
     String getMimeType() {
