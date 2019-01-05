@@ -100,9 +100,6 @@ public class Handler extends URLStreamHandler {
         int end = indexOfComma;
         if (isBase64Data(spec, indexOfComma)) {
             end -= BASE64_POSTFIX_LENGTH;
-            while (end > start && Character.isWhitespace(spec.charAt(end))) {
-                end--;
-            }
         }
         return start == end ? MediaType.DEFAULT : MediaType.parse(spec, start, end);
     }
