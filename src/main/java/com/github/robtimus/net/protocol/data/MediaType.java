@@ -122,13 +122,13 @@ final class MediaType {
         }
     }
 
-    private static final class SubString implements CharSequence {
+    static final class SubString implements CharSequence {
 
         private final String s;
         private final int offset;
         private final int limit;
 
-        private SubString(String s, int offset, int limit) {
+        SubString(String s, int offset, int limit) {
             this.s = s;
             this.offset = offset;
             this.limit = limit;
@@ -146,7 +146,12 @@ final class MediaType {
 
         @Override
         public CharSequence subSequence(int start, int end) {
-            return s.substring(start + offset, end - offset);
+            return s.substring(start + offset, end + offset);
+        }
+
+        @Override
+        public String toString() {
+            return s.substring(offset, limit);
         }
     }
 
