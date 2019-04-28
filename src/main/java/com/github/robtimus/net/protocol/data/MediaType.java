@@ -146,7 +146,7 @@ final class MediaType {
 
         @Override
         public CharSequence subSequence(int start, int end) {
-            return s.substring(start + offset, end + offset);
+            return new SubString(s, start + offset, end + offset);
         }
 
         @Override

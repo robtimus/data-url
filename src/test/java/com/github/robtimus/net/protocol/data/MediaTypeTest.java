@@ -325,7 +325,7 @@ public class MediaTypeTest {
         }
         for (int i = 0; i < subString.length(); i++) {
             for (int j = i; j < subString.length(); j++) {
-                assertEquals(original.substring(i + 2, j + 2), subString.subSequence(i, j));
+                assertEquals(original.substring(i + 2, j + 2), subString.subSequence(i, j).toString());
             }
         }
     }
