@@ -313,20 +313,4 @@ public class MediaTypeTest {
 
         MediaType.parse(type);
     }
-
-    @Test
-    public void testSubString() {
-        String original = "hello world";
-        CharSequence subString = new MediaType.SubString(original, 2, original.length() - 2);
-        assertEquals(original.length() - 4, subString.length());
-        assertEquals(original.substring(2, original.length() - 2), subString.toString());
-        for (int i = 0, j = 2; i < subString.length(); i++, j++) {
-            assertEquals(original.charAt(j), subString.charAt(i));
-        }
-        for (int i = 0; i < subString.length(); i++) {
-            for (int j = i; j < subString.length(); j++) {
-                assertEquals(original.substring(i + 2, j + 2), subString.subSequence(i, j).toString());
-            }
-        }
-    }
 }

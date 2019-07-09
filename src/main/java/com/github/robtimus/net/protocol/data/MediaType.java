@@ -114,44 +114,8 @@ final class MediaType {
     private static final Pattern MIME_TYPE_PATTERN = Pattern.compile(TOKEN + "+/" + TOKEN + "+"); //$NON-NLS-1$ //$NON-NLS-2$
 
     private static void validateMimeType(String mimeType, int start, int end) {
-        // Use a CharSequence wrapper to cap the limits of the mime type, to prevent the matcher from going out of bounds.
-        // This wrapper is used instead of mimeType.substring because that copies part of the mime type's contents.
-        CharSequence s = start == 0 && end == mimeType.length() ? mimeType : new SubString(mimeType, start, end);
-        if (!MIME_TYPE_PATTERN.matcher(s).matches()) {
+        if (!MIME_TYPE_PATTERN.matcher(mimeType).region(start, end).matches()) {
             throw new IllegalArgumentException(Messages.mediaType.invalidMimeType.get(mimeType));
-        }
-    }
-
-    static final class SubString implements CharSequence {
-
-        private final String s;
-        private final int offset;
-        private final int limit;
-
-        SubString(String s, int offset, int limit) {
-            this.s = s;
-            this.offset = offset;
-            this.limit = limit;
-        }
-
-        @Override
-        public int length() {
-            return limit - offset;
-        }
-
-        @Override
-        public char charAt(int index) {
-            return s.charAt(index + offset);
-        }
-
-        @Override
-        public CharSequence subSequence(int start, int end) {
-            return new SubString(s, start + offset, end + offset);
-        }
-
-        @Override
-        public String toString() {
-            return s.substring(offset, limit);
         }
     }
 
