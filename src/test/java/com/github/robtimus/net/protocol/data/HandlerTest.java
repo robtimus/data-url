@@ -17,10 +17,12 @@
 
 package com.github.robtimus.net.protocol.data;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.spy;
@@ -31,17 +33,29 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.Base64;
+import java.util.Properties;
 import java.util.Random;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.contrib.java.lang.system.RestoreSystemProperties;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({ "nls", "javadoc" })
 public class HandlerTest {
 
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-    @Rule public RestoreSystemProperties restoreSystemProperties = new RestoreSystemProperties();
+    private Properties originalProperties;
+
+    @BeforeEach
+    public void storeOriginalProperties() {
+        originalProperties = System.getProperties();
+        Properties newProperties = new Properties();
+        newProperties.putAll(originalProperties);
+        System.setProperties(newProperties);
+    }
+
+    @AfterEach
+    public void restoreOriginalProperties() {
+        System.setProperties(originalProperties);
+    }
 
     @Test
     public void testRegistration() throws MalformedURLException {
@@ -104,10 +118,8 @@ public class HandlerTest {
 
         URL url = new URL("http://www.google.com/");
 
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(Messages.handler.invalidProtocol.get(Handler.PROTOCOL, url.getProtocol()));
-
-        handler.openConnection(url);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> handler.openConnection(url));
+        assertEquals(Messages.handler.invalidProtocol.get(Handler.PROTOCOL, url.getProtocol()), exception.getMessage());
     }
 
     @Test
@@ -117,10 +129,8 @@ public class HandlerTest {
         String path = "hello+world";
         URL url = createDataURL(path);
 
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(Messages.handler.missingComma.get("data:" + path));
-
-        handler.openConnection(url);
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> handler.openConnection(url));
+        assertEquals(Messages.handler.missingComma.get("data:" + path), exception.getMessage());
     }
 
     @Test
@@ -130,10 +140,8 @@ public class HandlerTest {
         String path = "text/plain;charset=something+invalid,hello+world";
         URL url = createDataURL(path);
 
-        expectedException.expect(UnsupportedCharsetException.class);
-        expectedException.expectMessage("something+invalid");
-
-        handler.openConnection(url);
+        UnsupportedCharsetException exception = assertThrows(UnsupportedCharsetException.class, () -> handler.openConnection(url));
+        assertEquals("something+invalid", exception.getMessage());
     }
 
     @Test
@@ -174,9 +182,7 @@ public class HandlerTest {
 
         URL url = createDataURL(path);
 
-        expectedException.expect(IllegalArgumentException.class);
-
-        handler.openConnection(url);
+        assertThrows(IllegalArgumentException.class, () -> handler.openConnection(url));
     }
 
     @Test
@@ -217,9 +223,7 @@ public class HandlerTest {
 
         URL url = createDataURL(path);
 
-        expectedException.expect(IllegalArgumentException.class);
-
-        handler.openConnection(url);
+        assertThrows(IllegalArgumentException.class, () -> handler.openConnection(url));
     }
 
     @Test
@@ -260,9 +264,7 @@ public class HandlerTest {
 
         URL url = createDataURL(path);
 
-        expectedException.expect(IllegalArgumentException.class);
-
-        handler.openConnection(url);
+        assertThrows(IllegalArgumentException.class, () -> handler.openConnection(url));
     }
 
     @Test
@@ -288,15 +290,9 @@ public class HandlerTest {
 
         String spec = "http://www.google.com/";
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        try {
-            new URL(null, spec, handler);
-        } catch (MalformedURLException e) {
-            verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
-            throw e;
-        }
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> new URL(null, spec, handler));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
     }
 
     @SuppressWarnings("unused")
@@ -308,15 +304,9 @@ public class HandlerTest {
         String spec = "data:" + path;
         String specWithAnchor = spec + "#anchor,";
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        try {
-            new URL(null, specWithAnchor, handler);
-        } catch (MalformedURLException e) {
-            verify(handler).parseURL(any(URL.class), eq(specWithAnchor), eq(5), eq(spec.length()));
-            throw e;
-        }
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> new URL(null, specWithAnchor, handler));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        verify(handler).parseURL(any(URL.class), eq(specWithAnchor), eq(5), eq(spec.length()));
     }
 
     @SuppressWarnings("unused")
@@ -327,15 +317,9 @@ public class HandlerTest {
         String path = "hello+world";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        try {
-            new URL(null, spec, handler);
-        } catch (MalformedURLException e) {
-            verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
-            throw e;
-        }
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> new URL(null, spec, handler));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
     }
 
     @SuppressWarnings("unused")
@@ -346,15 +330,9 @@ public class HandlerTest {
         String path = "text/plain;charset=something+invalid,hello+world";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        try {
-            new URL(null, spec, handler);
-        } catch (MalformedURLException e) {
-            verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
-            throw e;
-        }
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> new URL(null, spec, handler));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
     }
 
     @Test
@@ -409,15 +387,9 @@ public class HandlerTest {
         String path = ";base64," + Base64.getEncoder().encodeToString(bytes) + "%";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        try {
-            new URL(null, spec, handler);
-        } catch (MalformedURLException e) {
-            verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
-            throw e;
-        }
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> new URL(null, spec, handler));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
     }
 
     @Test
@@ -458,15 +430,9 @@ public class HandlerTest {
         String path = "application/octect-stream;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        try {
-            new URL(null, spec, handler);
-        } catch (MalformedURLException e) {
-            verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
-            throw e;
-        }
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> new URL(null, spec, handler));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
     }
 
     @Test
@@ -507,15 +473,9 @@ public class HandlerTest {
         String path = "application/octect-stream;charset=UTF-8;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        try {
-            new URL(null, spec, handler);
-        } catch (MalformedURLException e) {
-            verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
-            throw e;
-        }
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> new URL(null, spec, handler));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
     }
 
     @Test

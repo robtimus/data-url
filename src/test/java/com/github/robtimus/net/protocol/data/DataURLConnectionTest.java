@@ -17,10 +17,11 @@
 
 package com.github.robtimus.net.protocol.data;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,27 +29,27 @@ import java.net.MalformedURLException;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.util.Random;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({ "nls", "javadoc" })
 public class DataURLConnectionTest {
 
     private static URL testURL;
 
-    @BeforeClass
+    @BeforeAll
     public static void initTestURL() throws MalformedURLException {
         testURL = new URL(null, "data:,", new Handler());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testConnect() {
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.DEFAULT, new byte[0]);
 
         connection.connect();
 
         // can't call setDoInput on connected URLConnections
-        connection.setDoInput(true);
+        assertThrows(IllegalStateException.class, () -> connection.setDoInput(true));
     }
 
     @Test
@@ -114,8 +115,8 @@ public class DataURLConnectionTest {
         assertArrayEquals(data, readData(connection));
     }
 
-    @Test(expected = ProtocolException.class)
-    public void testGetInputStreamNoDoInput() throws IOException {
+    @Test
+    public void testGetInputStreamNoDoInput() {
         int length = 1024;
 
         byte[] data = new byte[length];
@@ -124,7 +125,7 @@ public class DataURLConnectionTest {
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.DEFAULT, data);
         connection.setDoInput(false);
 
-        connection.getInputStream();
+        assertThrows(ProtocolException.class, () -> connection.getInputStream());
     }
 
     @Test

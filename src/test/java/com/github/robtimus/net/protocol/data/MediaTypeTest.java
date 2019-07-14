@@ -17,20 +17,17 @@
 
 package com.github.robtimus.net.protocol.data;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings({ "nls", "javadoc" })
 public class MediaTypeTest {
-
-    @Rule public ExpectedException expectedException = ExpectedException.none();
 
     @Test
     public void testConstructNoParameters() {
@@ -94,20 +91,16 @@ public class MediaTypeTest {
     public void testConstructInvalidMimeTypeNoSubType() {
         String type = "application";
 
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(Messages.mediaType.invalidMimeType.get(type));
-
-        MediaType.create(type, Collections.emptyMap());
+        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, Collections.emptyMap()));
+        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
     }
 
     @Test
     public void testConstructInvalidMimeTypeInvalidTokenChar() {
         String type = "application/json@";
 
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(Messages.mediaType.invalidMimeType.get(type));
-
-        MediaType.create(type, Collections.emptyMap());
+        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, Collections.emptyMap()));
+        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
     }
 
     @Test
@@ -298,19 +291,15 @@ public class MediaTypeTest {
     public void testParseInvalidMimeTypeNoSubType() {
         String type = "application";
 
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(Messages.mediaType.invalidMimeType.get(type));
-
-        MediaType.parse(type);
+        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.parse(type));
+        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
     }
 
     @Test
     public void testParseInvalidMimeTypeInvalidTokenChar() {
         String type = "application/json@";
 
-        expectedException.expect(IllegalArgumentException.class);
-        expectedException.expectMessage(Messages.mediaType.invalidMimeType.get(type));
-
-        MediaType.parse(type);
+        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.parse(type));
+        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
     }
 }

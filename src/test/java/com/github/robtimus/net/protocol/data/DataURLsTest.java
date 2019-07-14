@@ -17,9 +17,11 @@
 
 package com.github.robtimus.net.protocol.data;
 
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -29,46 +31,36 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Random;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.ExpectedException;
+import org.junit.jupiter.api.Test;
 import com.github.robtimus.net.protocol.data.DataURLs.Base64Appender;
 
 @SuppressWarnings({ "nls", "javadoc" })
 public class DataURLsTest {
 
-    @Rule public ExpectedException expectedException = ExpectedException.none();
-
     @Test
-    public void testCreateNoDataProtocol() throws MalformedURLException {
+    public void testCreateNoDataProtocol() {
         String spec = "http://www.google.com/";
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        DataURLs.create(spec);
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
     }
 
     @Test
-    public void testCreateNoCommaPresent() throws MalformedURLException {
+    public void testCreateNoCommaPresent() {
         String path = "hello+world";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        DataURLs.create(spec);
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
     }
 
     @Test
-    public void testCreateInvalidCharset() throws MalformedURLException {
+    public void testCreateInvalidCharset() {
         String path = "text/plain;charset=something+invalid,hello+world";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        DataURLs.create(spec);
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
     }
 
     @Test
@@ -94,16 +86,14 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateInvalidBase64NoMediaType() throws MalformedURLException {
+    public void testCreateInvalidBase64NoMediaType() {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = ";base64," + Base64.getEncoder().encodeToString(bytes) + "%";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        DataURLs.create(spec);
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
     }
 
     @Test
@@ -129,16 +119,14 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateInvalidBase64MediaTypeNoParameters() throws MalformedURLException {
+    public void testCreateInvalidBase64MediaTypeNoParameters() {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = "application/octect-stream;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        DataURLs.create(spec);
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
     }
 
     @Test
@@ -164,16 +152,14 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateInvalidBase64MediaTypeWithParameters() throws MalformedURLException {
+    public void testCreateInvalidBase64MediaTypeWithParameters() {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = "application/octect-stream;charset=UTF-8;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
         String spec = "data:" + path;
 
-        expectedException.expect(MalformedURLException.class);
-        expectedException.expectCause(instanceOf(IllegalArgumentException.class));
-
-        DataURLs.create(spec);
+        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
     }
 
     @Test
