@@ -78,6 +78,7 @@ public final class DataURLs {
      * @param data The data for created data URLs.
      * @return The created builder.
      */
+    @SuppressWarnings("resource")
     public static Builder.FromText builder(Reader data) {
         Objects.requireNonNull(data);
         return new Builder.FromText(sb -> copyData(data, sb));
@@ -103,6 +104,7 @@ public final class DataURLs {
      * @param data The data for created data URLs.
      * @return The created builder.
      */
+    @SuppressWarnings("resource")
     public static Builder.FromBytes builder(InputStream data) {
         Objects.requireNonNull(data);
         return new Builder.FromBytes(() -> data);
@@ -239,7 +241,9 @@ public final class DataURLs {
                     try (OutputStream appender = new Base64Appender(file);
                             OutputStream dest = Base64.getEncoder().wrap(appender)) {
 
-                        copyData(dataSupplier.get(), dest);
+                        @SuppressWarnings("resource")
+                        InputStream data = dataSupplier.get();
+                        copyData(data, dest);
                     } catch (IOException e) {
                         throw new UncheckedIOException(e);
                     }
