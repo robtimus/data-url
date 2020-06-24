@@ -34,11 +34,11 @@ import java.util.Random;
 import org.junit.jupiter.api.Test;
 import com.github.robtimus.net.protocol.data.DataURLs.Base64Appender;
 
-@SuppressWarnings({ "nls", "javadoc" })
-public class DataURLsTest {
+@SuppressWarnings("nls")
+class DataURLsTest {
 
     @Test
-    public void testCreateNoDataProtocol() {
+    void testCreateNoDataProtocol() {
         String spec = "http://www.google.com/";
 
         MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
@@ -46,7 +46,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateNoCommaPresent() {
+    void testCreateNoCommaPresent() {
         String path = "hello+world";
         String spec = "data:" + path;
 
@@ -55,7 +55,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateInvalidCharset() {
+    void testCreateInvalidCharset() {
         String path = "text/plain;charset=something+invalid,hello+world";
         String spec = "data:" + path;
 
@@ -64,7 +64,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateNoMediaType() throws MalformedURLException {
+    void testCreateNoMediaType() throws MalformedURLException {
         String path = ",hello+world";
         String spec = "data:" + path;
 
@@ -74,7 +74,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateBase64NoMediaType() throws MalformedURLException {
+    void testCreateBase64NoMediaType() throws MalformedURLException {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = ";base64," + Base64.getEncoder().encodeToString(bytes);
@@ -86,7 +86,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateInvalidBase64NoMediaType() {
+    void testCreateInvalidBase64NoMediaType() {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = ";base64," + Base64.getEncoder().encodeToString(bytes) + "%";
@@ -97,7 +97,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateMediaTypeNoParameters() throws MalformedURLException {
+    void testCreateMediaTypeNoParameters() throws MalformedURLException {
         String path = "text/plain,hello+world";
         String spec = "data:" + path;
 
@@ -107,7 +107,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateBase64MediaTypeNoParameters() throws MalformedURLException {
+    void testCreateBase64MediaTypeNoParameters() throws MalformedURLException {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = "application/octet-stream;base64," + Base64.getEncoder().encodeToString(bytes);
@@ -119,7 +119,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateInvalidBase64MediaTypeNoParameters() {
+    void testCreateInvalidBase64MediaTypeNoParameters() {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = "application/octect-stream;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
@@ -130,7 +130,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateMediaTypeWithParameters() throws MalformedURLException {
+    void testCreateMediaTypeWithParameters() throws MalformedURLException {
         String path = "text/plain;charset=UTF-8,hello+world";
         String spec = "data:" + path;
 
@@ -140,7 +140,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateBase64MediaTypeWithParameters() throws MalformedURLException {
+    void testCreateBase64MediaTypeWithParameters() throws MalformedURLException {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = "application/octet-stream;charset=UTF-8;base64," + Base64.getEncoder().encodeToString(bytes);
@@ -152,7 +152,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testCreateInvalidBase64MediaTypeWithParameters() {
+    void testCreateInvalidBase64MediaTypeWithParameters() {
         byte[] bytes = new byte[1024];
         new Random().nextBytes(bytes);
         String path = "application/octect-stream;charset=UTF-8;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
@@ -163,7 +163,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStringBare() {
+    void testBuilderFromStringBare() {
         String data = "hello+world";
         String path = "," + data;
 
@@ -174,7 +174,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStringWithMediaType() {
+    void testBuilderFromStringWithMediaType() {
         String mediaType = "application/json";
         String data = "hello+world";
         String path = mediaType + "," + data;
@@ -187,7 +187,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStringWithMediaTypeAndParams() {
+    void testBuilderFromStringWithMediaTypeAndParams() {
         String mediaType = "application/json;charset=UTF-8";
         String paramName = "last-modified";
         String paramValue = "0";
@@ -203,7 +203,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromReaderBare() {
+    void testBuilderFromReaderBare() {
         String data = "hello+world";
         String path = "," + data;
 
@@ -214,7 +214,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromReaderWithMediaType() {
+    void testBuilderFromReaderWithMediaType() {
         String mediaType = "application/json";
         String data = "hello+world";
         String path = mediaType + "," + data;
@@ -227,7 +227,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromReaderWithMediaTypeAndParams() {
+    void testBuilderFromReaderWithMediaTypeAndParams() {
         String mediaType = "application/json;charset=UTF-8";
         String paramName = "last-modified";
         String paramValue = "0";
@@ -243,7 +243,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromBytesBase64Bare() {
+    void testBuilderFromBytesBase64Bare() {
         byte[] data = new byte[1024];
         new Random().nextBytes(data);
         String path = ";base64," + Base64.getEncoder().encodeToString(data);
@@ -255,7 +255,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromBytesBase64WithMediaType() {
+    void testBuilderFromBytesBase64WithMediaType() {
         String mediaType = "application/json";
         byte[] data = new byte[1024];
         new Random().nextBytes(data);
@@ -269,7 +269,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromBytesBase64WithMediaTypeAndParams() {
+    void testBuilderFromBytesBase64WithMediaTypeAndParams() {
         String mediaType = "application/json;charset=UTF-8";
         String paramName = "last-modified";
         String paramValue = "0";
@@ -286,7 +286,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromBytesNoBase64Bare() {
+    void testBuilderFromBytesNoBase64Bare() {
         String data = "hello+world";
         String path = "," + data;
 
@@ -298,7 +298,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromBytesNoBase64WithMediaType() {
+    void testBuilderFromBytesNoBase64WithMediaType() {
         String mediaType = "application/json";
         String data = "hello+world";
         String path = mediaType + "," + data;
@@ -312,7 +312,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromBytesNoBase64WithMediaTypeAndParams() {
+    void testBuilderFromBytesNoBase64WithMediaTypeAndParams() {
         String mediaType = "application/json;charset=UTF-8";
         String paramName = "last-modified";
         String paramValue = "0";
@@ -329,7 +329,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStreamBase64Bare() {
+    void testBuilderFromStreamBase64Bare() {
         byte[] data = new byte[1024];
         new Random().nextBytes(data);
         String path = ";base64," + Base64.getEncoder().encodeToString(data);
@@ -341,7 +341,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStreamBase64WithMediaType() {
+    void testBuilderFromStreamBase64WithMediaType() {
         String mediaType = "application/json";
         byte[] data = new byte[1024];
         new Random().nextBytes(data);
@@ -355,7 +355,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStreamBase64WithMediaTypeAndParams() {
+    void testBuilderFromStreamBase64WithMediaTypeAndParams() {
         String mediaType = "application/json;charset=UTF-8";
         String paramName = "last-modified";
         String paramValue = "0";
@@ -372,7 +372,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStreamNoBase64Bare() {
+    void testBuilderFromStreamNoBase64Bare() {
         String data = "hello+world";
         String path = "," + data;
 
@@ -384,7 +384,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStreamNoBase64WithMediaType() {
+    void testBuilderFromStreamNoBase64WithMediaType() {
         String mediaType = "application/json";
         String data = "hello+world";
         String path = mediaType + "," + data;
@@ -398,7 +398,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderFromStreamNoBase64WithMediaTypeAndParams() {
+    void testBuilderFromStreamNoBase64WithMediaTypeAndParams() {
         String mediaType = "application/json;charset=UTF-8";
         String paramName = "last-modified";
         String paramValue = "0";
@@ -415,7 +415,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderWithMediaTypeWithNullMediaTypeParameter() {
+    void testBuilderWithMediaTypeWithNullMediaTypeParameter() {
         String bareMediaType = "application/json";
         String mediaType = bareMediaType + ";charset=UTF-8";
         String paramName = "last-modified";
@@ -434,7 +434,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBuilderWithMediaTypeWithCharset() {
+    void testBuilderWithMediaTypeWithCharset() {
         String mediaType = "application/json;charset=UTF-8";
         String paramName = "last-modified";
         String paramValue = "0";
@@ -465,7 +465,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBase64AppenderWriteByte() throws IOException {
+    void testBase64AppenderWriteByte() throws IOException {
         StringBuilder sb = new StringBuilder();
         StringBuilder expected = new StringBuilder();
         try (OutputStream appender = new Base64Appender(sb)) {
@@ -478,7 +478,7 @@ public class DataURLsTest {
     }
 
     @Test
-    public void testBase64AppenderWriteArray() throws IOException {
+    void testBase64AppenderWriteArray() throws IOException {
         StringBuilder sb = new StringBuilder();
         StringBuilder expected = new StringBuilder();
         try (OutputStream appender = new Base64Appender(sb)) {

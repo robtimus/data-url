@@ -32,18 +32,18 @@ import java.util.Random;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({ "nls", "javadoc" })
-public class DataURLConnectionTest {
+@SuppressWarnings("nls")
+class DataURLConnectionTest {
 
     private static URL testURL;
 
     @BeforeAll
-    public static void initTestURL() throws MalformedURLException {
+    static void initTestURL() throws MalformedURLException {
         testURL = new URL(null, "data:,", new Handler());
     }
 
     @Test
-    public void testConnect() {
+    void testConnect() {
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.DEFAULT, new byte[0]);
 
         connection.connect();
@@ -53,7 +53,7 @@ public class DataURLConnectionTest {
     }
 
     @Test
-    public void testGetContentLength() {
+    void testGetContentLength() {
         int length = 1024;
 
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.DEFAULT, new byte[length]);
@@ -63,7 +63,7 @@ public class DataURLConnectionTest {
     }
 
     @Test
-    public void testGetContentType() {
+    void testGetContentType() {
         String contentType = "application/json; charset=UTF-8";
 
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.parse(contentType), new byte[0]);
@@ -72,14 +72,14 @@ public class DataURLConnectionTest {
     }
 
     @Test
-    public void testGetContentTypeDefaultValue() {
+    void testGetContentTypeDefaultValue() {
         DataURLConnection connection = new Handler().openConnection(testURL);
 
         assertEquals(MediaType.DEFAULT.toString(), connection.getContentType());
     }
 
     @Test
-    public void testGetContentEncoding() {
+    void testGetContentEncoding() {
         String contentType = "application/json; charset=UTF-8";
 
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.parse(contentType), new byte[0]);
@@ -88,7 +88,7 @@ public class DataURLConnectionTest {
     }
 
     @Test
-    public void testGetContentEncodingNotSet() {
+    void testGetContentEncodingNotSet() {
         String contentType = "application/json";
 
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.parse(contentType), new byte[0]);
@@ -97,14 +97,14 @@ public class DataURLConnectionTest {
     }
 
     @Test
-    public void testGetContentEncodingDefaultValue() {
+    void testGetContentEncodingDefaultValue() {
         DataURLConnection connection = new Handler().openConnection(testURL);
 
         assertEquals("US-ASCII", connection.getContentEncoding());
     }
 
     @Test
-    public void testGetInputStream() throws IOException {
+    void testGetInputStream() throws IOException {
         int length = 1024;
 
         byte[] data = new byte[length];
@@ -116,7 +116,7 @@ public class DataURLConnectionTest {
     }
 
     @Test
-    public void testGetInputStreamNoDoInput() {
+    void testGetInputStreamNoDoInput() {
         int length = 1024;
 
         byte[] data = new byte[length];
@@ -129,7 +129,7 @@ public class DataURLConnectionTest {
     }
 
     @Test
-    public void testGetInputStreamTwice() throws IOException {
+    void testGetInputStreamTwice() throws IOException {
         int length = 1024;
 
         byte[] data = new byte[length];

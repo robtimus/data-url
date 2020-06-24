@@ -26,11 +26,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({ "nls", "javadoc" })
-public class MediaTypeTest {
+@SuppressWarnings("nls")
+class MediaTypeTest {
 
     @Test
-    public void testConstructNoParameters() {
+    void testConstructNoParameters() {
         String type = "application/json";
 
         MediaType mediaType = MediaType.create(type, Collections.emptyMap());
@@ -42,7 +42,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testConstructWithOneParameters() {
+    void testConstructWithOneParameters() {
         String type = "application/json";
 
         Map<String, String> parameters = Collections.singletonMap("charset", "UTF-8");
@@ -56,7 +56,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testConstructWithMultipleParameters() {
+    void testConstructWithMultipleParameters() {
         String type = "application/json";
 
         Map<String, String> parameters = new LinkedHashMap<>();
@@ -72,7 +72,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testConstructWithNullParameterValue() {
+    void testConstructWithNullParameterValue() {
         String type = "application/json";
 
         Map<String, String> parameters = new LinkedHashMap<>();
@@ -88,7 +88,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testConstructInvalidMimeTypeNoSubType() {
+    void testConstructInvalidMimeTypeNoSubType() {
         String type = "application";
 
         IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, Collections.emptyMap()));
@@ -96,7 +96,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testConstructInvalidMimeTypeInvalidTokenChar() {
+    void testConstructInvalidMimeTypeInvalidTokenChar() {
         String type = "application/json@";
 
         IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, Collections.emptyMap()));
@@ -104,7 +104,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseNoParameters() {
+    void testParseNoParameters() {
         String type = "application/json";
 
         MediaType mediaType = MediaType.parse(type);
@@ -116,7 +116,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseStartOnly() {
+    void testParseStartOnly() {
         String type = "application/json";
 
         MediaType mediaType = MediaType.parse(type + "!", 0, type.length());
@@ -128,7 +128,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseEndOnly() {
+    void testParseEndOnly() {
         String type = "application/json";
 
         MediaType mediaType = MediaType.parse("!" + type, 1, type.length() + 1);
@@ -140,7 +140,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseMiddleOnly() {
+    void testParseMiddleOnly() {
         String type = "application/json";
 
         MediaType mediaType = MediaType.parse("!" + type + "!", 1, type.length() + 1);
@@ -152,7 +152,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseEmptyParameters() {
+    void testParseEmptyParameters() {
         String type = "application/json";
 
         MediaType mediaType = MediaType.parse(type + ";");
@@ -164,7 +164,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithOneParameter() {
+    void testParseWithOneParameter() {
         String type = "application/json; CHARSET=UTF-8";
 
         MediaType mediaType = MediaType.parse(type);
@@ -176,7 +176,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithMultipleParameter() {
+    void testParseWithMultipleParameter() {
         String type = "application/json; CHARSET=UTF-8; last-modified=0";
 
         MediaType mediaType = MediaType.parse(type);
@@ -192,7 +192,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithEscapedAndQuotedParameter() {
+    void testParseWithEscapedAndQuotedParameter() {
         String type = "application/json; CHARSET=\"UTF-8;\"; last-modified=\\\"\\\\0";
 
         MediaType mediaType = MediaType.parse(type);
@@ -208,7 +208,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithEmptyValueParameterInMiddle() {
+    void testParseWithEmptyValueParameterInMiddle() {
         String type = "application/json; dummy=; CHARSET=UTF-8";
 
         MediaType mediaType = MediaType.parse(type);
@@ -224,7 +224,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithEmptyValueParameterAtEnd() {
+    void testParseWithEmptyValueParameterAtEnd() {
         String type = "application/json; CHARSET=UTF-8; dummy=";
 
         MediaType mediaType = MediaType.parse(type);
@@ -240,7 +240,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithNoValueParameterInMiddle() {
+    void testParseWithNoValueParameterInMiddle() {
         String type = "application/json; dummy; CHARSET=UTF-8";
 
         MediaType mediaType = MediaType.parse(type);
@@ -256,7 +256,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithNoValueParameterAtEnd() {
+    void testParseWithNoValueParameterAtEnd() {
         String type = "application/json; CHARSET=UTF-8; dummy";
 
         MediaType mediaType = MediaType.parse(type);
@@ -272,7 +272,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseWithOnlyNoParametera() {
+    void testParseWithOnlyNoParametera() {
         String type = "application/json; CHARSET; dummy";
 
         MediaType mediaType = MediaType.parse(type);
@@ -288,7 +288,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseInvalidMimeTypeNoSubType() {
+    void testParseInvalidMimeTypeNoSubType() {
         String type = "application";
 
         IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.parse(type));
@@ -296,7 +296,7 @@ public class MediaTypeTest {
     }
 
     @Test
-    public void testParseInvalidMimeTypeInvalidTokenChar() {
+    void testParseInvalidMimeTypeInvalidTokenChar() {
         String type = "application/json@";
 
         IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.parse(type));

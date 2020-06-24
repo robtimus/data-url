@@ -39,13 +39,13 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({ "nls", "javadoc" })
-public class HandlerTest {
+@SuppressWarnings("nls")
+class HandlerTest {
 
     private Properties originalProperties;
 
     @BeforeEach
-    public void storeOriginalProperties() {
+    void storeOriginalProperties() {
         originalProperties = System.getProperties();
         Properties newProperties = new Properties();
         newProperties.putAll(originalProperties);
@@ -53,12 +53,12 @@ public class HandlerTest {
     }
 
     @AfterEach
-    public void restoreOriginalProperties() {
+    void restoreOriginalProperties() {
         System.setProperties(originalProperties);
     }
 
     @Test
-    public void testRegistration() throws MalformedURLException {
+    void testRegistration() throws MalformedURLException {
         String packages = System.getProperty("java.protocol.handler.pkgs");
         packages = (packages == null ? "" : packages + "|") + "com.github.robtimus.net.protocol";
         System.setProperty("java.protocol.handler.pkgs", packages);
@@ -72,7 +72,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testDataURLWithDataURLContext() throws MalformedURLException {
+    void testDataURLWithDataURLContext() throws MalformedURLException {
         String packages = System.getProperty("java.protocol.handler.pkgs");
         packages = (packages == null ? "" : packages + "|") + "com.github.robtimus.net.protocol";
         System.setProperty("java.protocol.handler.pkgs", packages);
@@ -85,7 +85,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testDataURLWithHttpURLContext() throws MalformedURLException {
+    void testDataURLWithHttpURLContext() throws MalformedURLException {
         String packages = System.getProperty("java.protocol.handler.pkgs");
         packages = (packages == null ? "" : packages + "|") + "com.github.robtimus.net.protocol";
         System.setProperty("java.protocol.handler.pkgs", packages);
@@ -97,7 +97,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testHttpURLWithDataURLContext() throws MalformedURLException {
+    void testHttpURLWithDataURLContext() throws MalformedURLException {
         String packages = System.getProperty("java.protocol.handler.pkgs");
         packages = (packages == null ? "" : packages + "|") + "com.github.robtimus.net.protocol";
         System.setProperty("java.protocol.handler.pkgs", packages);
@@ -113,7 +113,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionNoDataProtocol() throws MalformedURLException {
+    void testOpenConnectionNoDataProtocol() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         URL url = new URL("http://www.google.com/");
@@ -123,7 +123,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionNoCommaPresent() throws MalformedURLException {
+    void testOpenConnectionNoCommaPresent() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "hello+world";
@@ -134,7 +134,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionInvalidCharset() throws MalformedURLException {
+    void testOpenConnectionInvalidCharset() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "text/plain;charset=something+invalid,hello+world";
@@ -145,7 +145,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionNoMediaType() throws MalformedURLException {
+    void testOpenConnectionNoMediaType() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = ",hello+world";
@@ -158,7 +158,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionBase64NoMediaType() throws MalformedURLException {
+    void testOpenConnectionBase64NoMediaType() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -173,7 +173,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionInvalidBase64NoMediaType() throws MalformedURLException {
+    void testOpenConnectionInvalidBase64NoMediaType() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -186,7 +186,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionMediaTypeNoParameters() throws MalformedURLException {
+    void testOpenConnectionMediaTypeNoParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "text/plain,hello+world";
@@ -199,7 +199,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionBase64MediaTypeNoParameters() throws MalformedURLException {
+    void testOpenConnectionBase64MediaTypeNoParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -214,7 +214,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionInvalidBase64MediaTypeNoParameters() throws MalformedURLException {
+    void testOpenConnectionInvalidBase64MediaTypeNoParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -227,7 +227,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionMediaTypeWithParameters() throws MalformedURLException {
+    void testOpenConnectionMediaTypeWithParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "text/plain;charset=UTF-8,hello+world";
@@ -240,7 +240,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionBase64MediaTypeWithParameters() throws MalformedURLException {
+    void testOpenConnectionBase64MediaTypeWithParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -255,7 +255,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionInvalidBase64MediaTypeWithParameters() throws MalformedURLException {
+    void testOpenConnectionInvalidBase64MediaTypeWithParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -268,7 +268,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testOpenConnectionWithProxy() throws MalformedURLException {
+    void testOpenConnectionWithProxy() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = ",hello+world";
@@ -285,7 +285,7 @@ public class HandlerTest {
 
     @SuppressWarnings("unused")
     @Test
-    public void testParseURLNoDataProtocol() throws MalformedURLException {
+    void testParseURLNoDataProtocol() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String spec = "http://www.google.com/";
@@ -297,7 +297,7 @@ public class HandlerTest {
 
     @SuppressWarnings("unused")
     @Test
-    public void testParseURLCommaPresentInAnchor() throws MalformedURLException {
+    void testParseURLCommaPresentInAnchor() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "hello+world";
@@ -311,7 +311,7 @@ public class HandlerTest {
 
     @SuppressWarnings("unused")
     @Test
-    public void testParseURLNoCommaPresent() throws MalformedURLException {
+    void testParseURLNoCommaPresent() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "hello+world";
@@ -324,7 +324,7 @@ public class HandlerTest {
 
     @SuppressWarnings("unused")
     @Test
-    public void testParseURLInvalidCharset() throws MalformedURLException {
+    void testParseURLInvalidCharset() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "text/plain;charset=something+invalid,hello+world";
@@ -336,7 +336,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testParseURLNoMediaTypeWithAnchor() throws MalformedURLException {
+    void testParseURLNoMediaTypeWithAnchor() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = ",hello+world";
@@ -350,7 +350,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testParseURLNoMediaType() throws MalformedURLException {
+    void testParseURLNoMediaType() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = ",hello+world";
@@ -363,7 +363,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testParseURLBase64NoMediaType() throws MalformedURLException {
+    void testParseURLBase64NoMediaType() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -379,7 +379,7 @@ public class HandlerTest {
 
     @SuppressWarnings("unused")
     @Test
-    public void testParseURLInvalidBase64NoMediaType() throws MalformedURLException {
+    void testParseURLInvalidBase64NoMediaType() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -393,7 +393,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testParseURLMediaTypeNoParameters() throws MalformedURLException {
+    void testParseURLMediaTypeNoParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "text/plain,hello+world";
@@ -406,7 +406,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testParseURLBase64MediaTypeNoParameters() throws MalformedURLException {
+    void testParseURLBase64MediaTypeNoParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -422,7 +422,7 @@ public class HandlerTest {
 
     @SuppressWarnings("unused")
     @Test
-    public void testParseURLInvalidBase64MediaTypeNoParameters() throws MalformedURLException {
+    void testParseURLInvalidBase64MediaTypeNoParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -436,7 +436,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testParseURLMediaTypeWithParameters() throws MalformedURLException {
+    void testParseURLMediaTypeWithParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         String path = "text/plain;charset=UTF-8,hello+world";
@@ -449,7 +449,7 @@ public class HandlerTest {
     }
 
     @Test
-    public void testParseURLBase64MediaTypeWithParameters() throws MalformedURLException {
+    void testParseURLBase64MediaTypeWithParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -465,7 +465,7 @@ public class HandlerTest {
 
     @SuppressWarnings("unused")
     @Test
-    public void testParseURLInvalidBase64MediaTypeWithParameters() throws MalformedURLException {
+    void testParseURLInvalidBase64MediaTypeWithParameters() throws MalformedURLException {
         Handler handler = spy(new Handler());
 
         byte[] bytes = new byte[1024];
@@ -479,19 +479,19 @@ public class HandlerTest {
     }
 
     @Test
-    public void testGetCharsetNoMediaType() {
+    void testGetCharsetNoMediaType() {
         assertEquals(StandardCharsets.US_ASCII, Handler.getCharset(null));
     }
 
     @Test
-    public void testGetCharsetMediaTypeNoCharset() {
+    void testGetCharsetMediaTypeNoCharset() {
         MediaType mediaType = MediaType.parse("application/json");
 
         assertEquals(StandardCharsets.US_ASCII, Handler.getCharset(mediaType));
     }
 
     @Test
-    public void testGetCharsetMediaTypeWithCharset() {
+    void testGetCharsetMediaTypeWithCharset() {
         MediaType mediaType = MediaType.parse("application/json;charset=UTF-8");
 
         assertEquals(StandardCharsets.UTF_8, Handler.getCharset(mediaType));
