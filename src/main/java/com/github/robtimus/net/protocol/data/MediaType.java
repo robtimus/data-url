@@ -151,32 +151,32 @@ final class MediaType {
             char c = paramString.charAt(i);
 
             switch (c) {
-            case '"':
-                if (backslash) {
-                    backslash = false;
+                case '"':
+                    if (backslash) {
+                        backslash = false;
+                        value.append(c);
+                    } else {
+                        quote = !quote;
+                    }
+                    break;
+                case '\\':
+                    if (backslash) {
+                        backslash = false;
+                        value.append(c);
+                    } else {
+                        backslash = true;
+                    }
+                    break;
+                case ';':
+                    if (!quote) {
+                        parameters.put(name, value.toString());
+                        return i + 1;
+                    }
                     value.append(c);
-                } else {
-                    quote = !quote;
-                }
-                break;
-            case '\\':
-                if (backslash) {
-                    backslash = false;
+                    break;
+                default:
                     value.append(c);
-                } else {
-                    backslash = true;
-                }
-                break;
-            case ';':
-                if (!quote) {
-                    parameters.put(name, value.toString());
-                    return i + 1;
-                }
-                value.append(c);
-                break;
-            default:
-                value.append(c);
-                break;
+                    break;
             }
         }
         parameters.put(name, value.toString());
