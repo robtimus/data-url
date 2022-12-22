@@ -91,16 +91,18 @@ class MediaTypeTest {
     void testConstructInvalidMimeTypeNoSubType() {
         String type = "application";
 
-        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, Collections.emptyMap()));
-        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
+        Map<String, String> parameters = Collections.emptyMap();
+        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, parameters));
+        assertEquals(Messages.mediaType.invalidMimeType(type), exeption.getMessage());
     }
 
     @Test
     void testConstructInvalidMimeTypeInvalidTokenChar() {
         String type = "application/json@";
 
-        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, Collections.emptyMap()));
-        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
+        Map<String, String> parameters = Collections.emptyMap();
+        IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.create(type, parameters));
+        assertEquals(Messages.mediaType.invalidMimeType(type), exeption.getMessage());
     }
 
     @Test
@@ -292,7 +294,7 @@ class MediaTypeTest {
         String type = "application";
 
         IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.parse(type));
-        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
+        assertEquals(Messages.mediaType.invalidMimeType(type), exeption.getMessage());
     }
 
     @Test
@@ -300,6 +302,6 @@ class MediaTypeTest {
         String type = "application/json@";
 
         IllegalArgumentException exeption = assertThrows(IllegalArgumentException.class, () -> MediaType.parse(type));
-        assertEquals(Messages.mediaType.invalidMimeType.get(type), exeption.getMessage());
+        assertEquals(Messages.mediaType.invalidMimeType(type), exeption.getMessage());
     }
 }

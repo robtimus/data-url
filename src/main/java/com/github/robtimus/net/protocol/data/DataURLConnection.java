@@ -96,7 +96,7 @@ public class DataURLConnection extends URLConnection {
     @Override
     public InputStream getInputStream() throws IOException {
         if (!doInput) {
-            throw new ProtocolException(Messages.dataURLConnection.getInputStream.falseDoInput.get());
+            throw new ProtocolException(Messages.dataURLConnection.getInputStream.falseDoInput());
         }
         if (inputStream == null) {
             inputStream = new ByteArrayInputStream(data);

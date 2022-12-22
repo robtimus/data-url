@@ -83,14 +83,14 @@ public class Handler extends URLStreamHandler {
 
     private void validateProtocol(URL u) {
         if (!PROTOCOL.equals(u.getProtocol())) {
-            throw new IllegalArgumentException(Messages.handler.invalidProtocol.get(PROTOCOL, u.getProtocol()));
+            throw new IllegalArgumentException(Messages.handler.invalidProtocol(PROTOCOL, u.getProtocol()));
         }
     }
 
     private int validateCommaPresent(String spec, int start, int limit) {
         int indexOfComma = spec.indexOf(',', start);
         if (indexOfComma == -1 || indexOfComma > limit) {
-            throw new IllegalArgumentException(Messages.handler.missingComma.get(spec));
+            throw new IllegalArgumentException(Messages.handler.missingComma(spec));
         }
         return indexOfComma;
     }

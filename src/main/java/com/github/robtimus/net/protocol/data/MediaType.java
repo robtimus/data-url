@@ -115,7 +115,7 @@ final class MediaType {
 
     private static void validateMimeType(String mimeType, int start, int end) {
         if (!MIME_TYPE_PATTERN.matcher(mimeType).region(start, end).matches()) {
-            throw new IllegalArgumentException(Messages.mediaType.invalidMimeType.get(mimeType));
+            throw new IllegalArgumentException(Messages.mediaType.invalidMimeType(mimeType));
         }
     }
 

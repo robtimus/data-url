@@ -119,7 +119,7 @@ class HandlerTest {
         URL url = new URL("http://www.google.com/");
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> handler.openConnection(url));
-        assertEquals(Messages.handler.invalidProtocol.get(Handler.PROTOCOL, url.getProtocol()), exception.getMessage());
+        assertEquals(Messages.handler.invalidProtocol(Handler.PROTOCOL, url.getProtocol()), exception.getMessage());
     }
 
     @Test
@@ -130,7 +130,7 @@ class HandlerTest {
         URL url = createDataURL(path);
 
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> handler.openConnection(url));
-        assertEquals(Messages.handler.missingComma.get("data:" + path), exception.getMessage());
+        assertEquals(Messages.handler.missingComma("data:" + path), exception.getMessage());
     }
 
     @Test
