@@ -1,4 +1,9 @@
 # data-url
+[![Maven Central](https://img.shields.io/maven-central/v/com.github.robtimus/data-url)](https://search.maven.org/artifact/com.github.robtimus/data-url)
+[![Build Status](https://github.com/robtimus/data-url/actions/workflows/build.yml/badge.svg)](https://github.com/robtimus/data-url/actions/workflows/build.yml)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=com.github.robtimus%3Adata-url&metric=alert_status)](https://sonarcloud.io/summary/overall?id=com.github.robtimus%3Adata-url)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=com.github.robtimus%3Adata-url&metric=coverage)](https://sonarcloud.io/summary/overall?id=com.github.robtimus%3Adata-url)
+[![Known Vulnerabilities](https://snyk.io/test/github/robtimus/data-url/badge.svg)](https://snyk.io/test/github/robtimus/data-url)
 
 The `data-url` library adds support for the `data` protocol as specified in [RFC 2397](https://www.ietf.org/rfc/rfc2397.txt).
 
