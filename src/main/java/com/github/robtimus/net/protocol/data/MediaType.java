@@ -32,13 +32,13 @@ final class MediaType {
 
     static final MediaType DEFAULT = new MediaType(DEFAULT_MEDIA_TYPE, DEFAULT_MIME_TYPE, DEFAULT_PARAMETERS);
 
-    private final String mediaType;
+    private final String mediaTypeString;
     private final String mimeType;
     private final Map<String, String> parameters;
     private final Map<String, String> parameterLookup;
 
-    private MediaType(String mediaType, String mimeType, Map<String, String> parameters) {
-        this.mediaType = mediaType;
+    private MediaType(String mediaTypeString, String mimeType, Map<String, String> parameters) {
+        this.mediaTypeString = mediaTypeString;
         this.mimeType = mimeType;
         this.parameters = Collections.unmodifiableMap(parameters);
         parameterLookup = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
@@ -48,12 +48,11 @@ final class MediaType {
     static MediaType create(String mimeType, Map<String, String> parameters) {
         validateMimeType(mimeType, 0, mimeType.length());
 
-        String mediaType = buildMediaType(mimeType, parameters);
-        return new MediaType(mediaType, mimeType, new LinkedHashMap<>(parameters));
+        String mediaTypeString = buildMediaTypeString(mimeType, parameters);
+        return new MediaType(mediaTypeString, mimeType, new LinkedHashMap<>(parameters));
     }
 
-    private static String buildMediaType(String mimeType, Map<String, String> parameters) {
-
+    private static String buildMediaTypeString(String mimeType, Map<String, String> parameters) {
         StringBuilder mediaType = new StringBuilder();
         mediaType.append(mimeType);
         for (Map.Entry<String, String> entry : parameters.entrySet()) {
@@ -224,6 +223,6 @@ final class MediaType {
 
     @Override
     public String toString() {
-        return mediaType;
+        return mediaTypeString;
     }
 }
