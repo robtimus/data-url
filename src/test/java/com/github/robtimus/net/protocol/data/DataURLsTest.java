@@ -37,6 +37,8 @@ import com.github.robtimus.net.protocol.data.DataURLs.Base64Appender;
 @SuppressWarnings("nls")
 class DataURLsTest {
 
+    private static final Random RANDOM = new Random();
+
     @Test
     void testCreateNoDataProtocol() {
         String spec = "http://www.google.com/";
@@ -499,8 +501,6 @@ class DataURLsTest {
         }
         assertEquals(expected.toString(), sb.toString());
     }
-
-    private static final Random RANDOM = new Random();
 
     private void fill(byte[] buffer, StringBuilder expected) {
         for (int i = 0; i < buffer.length; i++) {

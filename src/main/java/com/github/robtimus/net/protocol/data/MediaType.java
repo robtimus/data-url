@@ -30,6 +30,9 @@ final class MediaType {
     private static final String DEFAULT_MEDIA_TYPE = DEFAULT_MIME_TYPE + ";charset=" + DEFAULT_CHARSET; //$NON-NLS-1$
     private static final Map<String, String> DEFAULT_PARAMETERS = Collections.singletonMap("charset", DEFAULT_CHARSET); //$NON-NLS-1$
 
+    private static final String TOKEN = "[\u0021-\u007e&&[^()<>@,;:\\\\\"/\\[\\]?=]]"; //$NON-NLS-1$
+    private static final Pattern MIME_TYPE_PATTERN = Pattern.compile(TOKEN + "+/" + TOKEN + "+"); //$NON-NLS-1$ //$NON-NLS-2$
+
     static final MediaType DEFAULT = new MediaType(DEFAULT_MEDIA_TYPE, DEFAULT_MIME_TYPE, DEFAULT_PARAMETERS);
 
     private final String mediaTypeString;
@@ -108,9 +111,6 @@ final class MediaType {
 
         return new MediaType(type, mimeType, parameters);
     }
-
-    private static final String TOKEN = "[\u0021-\u007e&&[^()<>@,;:\\\\\"/\\[\\]?=]]"; //$NON-NLS-1$
-    private static final Pattern MIME_TYPE_PATTERN = Pattern.compile(TOKEN + "+/" + TOKEN + "+"); //$NON-NLS-1$ //$NON-NLS-2$
 
     private static void validateMimeType(String mimeType, int start, int end) {
         if (!MIME_TYPE_PATTERN.matcher(mimeType).region(start, end).matches()) {
