@@ -19,19 +19,32 @@ package com.github.robtimus.net.protocol.data;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.instanceOf;
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.Reader;
 import java.io.StringReader;
+import java.io.UncheckedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 import java.util.Random;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.input.BrokenInputStream;
+import org.apache.commons.io.input.BrokenReader;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import com.github.robtimus.net.protocol.data.DataURLs.Base64Appender;
 
 @SuppressWarnings("nls")
@@ -39,423 +52,512 @@ class DataURLsTest {
 
     private static final Random RANDOM = new Random();
 
-    @Test
-    void testCreateNoDataProtocol() {
-        String spec = "http://www.google.com/";
+    private static final String DEFAULT_CONTENT_TYPE = MediaType.DEFAULT.toString();
 
-        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
-        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+    @Nested
+    class CreateTest {
+
+        @Test
+        void testNoDataProtocol() {
+            String spec = "http://www.google.com/";
+
+            MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+            assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        }
+
+        @Test
+        void testNoCommaPresent() {
+            String path = "hello+world";
+            String spec = "data:" + path;
+
+            MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+            assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        }
+
+        @Test
+        void testInvalidCharset() {
+            String path = "text/plain;charset=something+invalid,hello+world";
+            String spec = "data:" + path;
+
+            MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+            assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        }
+
+        @Test
+        void testNoMediaType() throws MalformedURLException {
+            String path = ",hello+world";
+            String spec = "data:" + path;
+
+            URL url = DataURLs.create(spec);
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, "hello world");
+        }
+
+        @Test
+        void testBase64NoMediaType() throws MalformedURLException {
+            byte[] bytes = new byte[1024];
+            RANDOM.nextBytes(bytes);
+            String path = ";base64," + Base64.getEncoder().encodeToString(bytes);
+            String spec = "data:" + path;
+
+            URL url = DataURLs.create(spec);
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, bytes);
+        }
+
+        @Test
+        void testInvalidBase64NoMediaType() {
+            byte[] bytes = new byte[1024];
+            RANDOM.nextBytes(bytes);
+            String path = ";base64," + Base64.getEncoder().encodeToString(bytes) + "%";
+            String spec = "data:" + path;
+
+            MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+            assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        }
+
+        @Test
+        void testMediaTypeNoParameters() throws MalformedURLException {
+            String mediaType = "text/plain";
+            String path = mediaType + ",hello+world";
+            String spec = "data:" + path;
+
+            URL url = DataURLs.create(spec);
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, "hello world");
+        }
+
+        @Test
+        void testBase64MediaTypeNoParameters() throws MalformedURLException {
+            byte[] bytes = new byte[1024];
+            RANDOM.nextBytes(bytes);
+            String mediaType = "application/octet-stream";
+            String path = mediaType + ";base64," + Base64.getEncoder().encodeToString(bytes);
+            String spec = "data:" + path;
+
+            URL url = DataURLs.create(spec);
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, bytes);
+        }
+
+        @Test
+        void testInvalidBase64MediaTypeNoParameters() {
+            byte[] bytes = new byte[1024];
+            RANDOM.nextBytes(bytes);
+            String path = "application/octect-stream;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
+            String spec = "data:" + path;
+
+            MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+            assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        }
+
+        @Test
+        void testMediaTypeWithParameters() throws MalformedURLException {
+            String mediaType = "text/plain;charset=UTF-8";
+            String path = mediaType + ",hello+world";
+            String spec = "data:" + path;
+
+            URL url = DataURLs.create(spec);
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, "hello world");
+        }
+
+        @Test
+        void testBase64MediaTypeWithParameters() throws MalformedURLException {
+            byte[] bytes = new byte[1024];
+            RANDOM.nextBytes(bytes);
+            String mediaType = "application/octet-stream;charset=UTF-8";
+            String path = mediaType + ";base64," + Base64.getEncoder().encodeToString(bytes);
+            String spec = "data:" + path;
+
+            URL url = DataURLs.create(spec);
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, bytes);
+        }
+
+        @Test
+        void testInvalidBase64MediaTypeWithParameters() {
+            byte[] bytes = new byte[1024];
+            RANDOM.nextBytes(bytes);
+            String path = "application/octect-stream;charset=UTF-8;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
+            String spec = "data:" + path;
+
+            MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
+            assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        }
     }
 
-    @Test
-    void testCreateNoCommaPresent() {
-        String path = "hello+world";
-        String spec = "data:" + path;
+    @Nested
+    class BuilderFromStringTest {
 
-        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
-        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        @Test
+        void testBare() {
+            String data = "hello+world";
+            String path = "," + data;
+
+            URL url = DataURLs.builder(data)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, "hello world");
+        }
+
+        @Test
+        void testWithMediaType() {
+            String mediaType = "application/json";
+            String data = "hello+world";
+            String path = mediaType + "," + data;
+
+            URL url = DataURLs.builder(data)
+                    .withMediaType(mediaType)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, "hello world");
+        }
+
+        @Test
+        void testWithMediaTypeAndParams() {
+            String mediaType = "application/json;charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            String data = "hello+world";
+            String fullMediaType = mediaType + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + "," + data;
+
+            URL url = DataURLs.builder(data)
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, "hello world");
+        }
     }
 
-    @Test
-    void testCreateInvalidCharset() {
-        String path = "text/plain;charset=something+invalid,hello+world";
-        String spec = "data:" + path;
+    @Nested
+    class BuilderFromReaderTest {
 
-        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
-        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        @Test
+        void testBare() {
+            String data = "hello+world";
+            String path = "," + data;
+
+            URL url = DataURLs.builder(new StringReader(data))
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, "hello world");
+        }
+
+        @Test
+        void testWithMediaType() {
+            String mediaType = "application/json";
+            String data = "hello+world";
+            String path = mediaType + "," + data;
+
+            URL url = DataURLs.builder(new StringReader(data))
+                    .withMediaType(mediaType)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, "hello world");
+        }
+
+        @Test
+        void testWithMediaTypeAndParams() {
+            String mediaType = "application/json;charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            String data = "hello+world";
+            String fullMediaType = mediaType + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + "," + data;
+
+            URL url = DataURLs.builder(new StringReader(data))
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, "hello world");
+        }
+
+        void testIOException() {
+            IOException cause = new IOException();
+
+            @SuppressWarnings("resource")
+            Reader data = new BrokenReader(cause);
+            DataURLs.Builder builder = DataURLs.builder(data);
+
+            UncheckedIOException exception = assertThrows(UncheckedIOException.class, builder::build);
+            assertSame(cause, exception.getCause());
+        }
     }
 
-    @Test
-    void testCreateNoMediaType() throws MalformedURLException {
-        String path = ",hello+world";
-        String spec = "data:" + path;
+    @Nested
+    class BuilderFromBytesTest {
 
-        URL url = DataURLs.create(spec);
+        @Test
+        void testBase64Bare() {
+            byte[] data = new byte[1024];
+            RANDOM.nextBytes(data);
+            String path = ";base64," + Base64.getEncoder().encodeToString(data);
 
-        assertURL(url, path);
+            URL url = DataURLs.builder(data)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, data);
+        }
+
+        @Test
+        void testBase64WithMediaType() {
+            String mediaType = "application/json";
+            byte[] data = new byte[1024];
+            RANDOM.nextBytes(data);
+            String path = mediaType + ";base64," + Base64.getEncoder().encodeToString(data);
+
+            URL url = DataURLs.builder(data)
+                    .withMediaType(mediaType)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, data);
+        }
+
+        @Test
+        void testBase64WithMediaTypeAndParams() {
+            String mediaType = "application/json;charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            byte[] data = new byte[1024];
+            RANDOM.nextBytes(data);
+            String fullMediaType = mediaType + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + ";base64," + Base64.getEncoder().encodeToString(data);
+
+            URL url = DataURLs.builder(data)
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, data);
+        }
+
+        @Test
+        void testNoBase64Bare() {
+            String data = "hello+world";
+            String path = "," + data;
+
+            URL url = DataURLs.builder(data.getBytes(StandardCharsets.US_ASCII))
+                    .withBase64Data(false)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, "hello world");
+        }
+
+        @Test
+        void testNoBase64WithMediaType() {
+            String mediaType = "application/json";
+            String data = "hello+world";
+            String path = mediaType + "," + data;
+
+            URL url = DataURLs.builder(data.getBytes(StandardCharsets.US_ASCII))
+                    .withBase64Data(false)
+                    .withMediaType(mediaType)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, "hello world");
+        }
+
+        @Test
+        void testNoBase64WithMediaTypeAndParams() {
+            String mediaType = "application/json;charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            String data = "hello+world";
+            String fullMediaType = mediaType + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + "," + data;
+
+            URL url = DataURLs.builder(data.getBytes(StandardCharsets.US_ASCII))
+                    .withBase64Data(false)
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, "hello world");
+        }
     }
 
-    @Test
-    void testCreateBase64NoMediaType() throws MalformedURLException {
-        byte[] bytes = new byte[1024];
-        new Random().nextBytes(bytes);
-        String path = ";base64," + Base64.getEncoder().encodeToString(bytes);
-        String spec = "data:" + path;
+    @Nested
+    class BuilderFromStreamTest {
 
-        URL url = DataURLs.create(spec);
+        @Test
+        void testBase64Bare() {
+            byte[] data = new byte[1024];
+            RANDOM.nextBytes(data);
+            String path = ";base64," + Base64.getEncoder().encodeToString(data);
 
-        assertURL(url, path);
+            URL url = DataURLs.builder(new ByteArrayInputStream(data))
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, data);
+        }
+
+        @Test
+        void testBase64WithMediaType() {
+            String mediaType = "application/json";
+            byte[] data = new byte[1024];
+            RANDOM.nextBytes(data);
+            String path = mediaType + ";base64," + Base64.getEncoder().encodeToString(data);
+
+            URL url = DataURLs.builder(new ByteArrayInputStream(data))
+                    .withMediaType(mediaType)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, data);
+        }
+
+        @Test
+        void testBase64WithMediaTypeAndParams() {
+            String mediaType = "application/json;charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            byte[] data = new byte[1024];
+            RANDOM.nextBytes(data);
+            String fullMediaType = mediaType + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + ";base64," + Base64.getEncoder().encodeToString(data);
+
+            URL url = DataURLs.builder(new ByteArrayInputStream(data))
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, data);
+        }
+
+        @Test
+        void testNoBase64Bare() {
+            String data = "hello+world";
+            String path = "," + data;
+
+            URL url = DataURLs.builder(new ByteArrayInputStream(data.getBytes(StandardCharsets.US_ASCII)))
+                    .withBase64Data(false)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, DEFAULT_CONTENT_TYPE, "hello world");
+        }
+
+        @Test
+        void testNoBase64WithMediaType() {
+            String mediaType = "application/json";
+            String data = "hello+world";
+            String path = mediaType + "," + data;
+
+            URL url = DataURLs.builder(new ByteArrayInputStream(data.getBytes(StandardCharsets.US_ASCII)))
+                    .withBase64Data(false)
+                    .withMediaType(mediaType)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, mediaType, "hello world");
+        }
+
+        @Test
+        void testNoBase64WithMediaTypeAndParams() {
+            String mediaType = "application/json;charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            String data = "hello+world";
+            String fullMediaType = mediaType + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + "," + data;
+
+            URL url = DataURLs.builder(new ByteArrayInputStream(data.getBytes(StandardCharsets.US_ASCII)))
+                    .withBase64Data(false)
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, "hello world");
+        }
+
+        @ParameterizedTest(name = "base64: {0}")
+        @ValueSource(booleans = { true, false })
+        void testIOException(boolean base64) {
+            IOException cause = new IOException();
+
+            @SuppressWarnings("resource")
+            InputStream data = new BrokenInputStream(cause);
+            DataURLs.Builder builder = DataURLs.builder(data)
+                    .withBase64Data(base64);
+
+            UncheckedIOException exception = assertThrows(UncheckedIOException.class, builder::build);
+            assertSame(cause, exception.getCause());
+        }
     }
 
-    @Test
-    void testCreateInvalidBase64NoMediaType() {
-        byte[] bytes = new byte[1024];
-        new Random().nextBytes(bytes);
-        String path = ";base64," + Base64.getEncoder().encodeToString(bytes) + "%";
-        String spec = "data:" + path;
+    @Nested
+    class BuilderWithMediaTypeTest {
 
-        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
-        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
+        @Test
+        void testWithNullMediaTypeParameter() {
+            String bareMediaType = "application/json";
+            String mediaType = bareMediaType + ";charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            String data = "hello+world";
+            String fullMediaType = bareMediaType + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + "," + data;
+
+            URL url = DataURLs.builder(data)
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .withCharset(StandardCharsets.US_ASCII)
+                    .withMediaTypeParameter("charset", null)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, "hello world");
+        }
+
+        @Test
+        void testWithCharset() {
+            String mediaType = "application/json;charset=UTF-8";
+            String paramName = "last-modified";
+            String paramValue = "0";
+            String data = "hello+world";
+            String fullMediaType = mediaType.replace("UTF-8", "US-ASCII") + ";" + paramName + "=" + paramValue;
+            String path = fullMediaType + "," + data;
+
+            URL url = DataURLs.builder(data)
+                    .withMediaType(mediaType)
+                    .withMediaTypeParameter(paramName, paramValue)
+                    .withCharset(StandardCharsets.US_ASCII)
+                    .build();
+
+            assertURL(url, path);
+            assertURLConnection(url, fullMediaType, "hello world");
+        }
     }
 
-    @Test
-    void testCreateMediaTypeNoParameters() throws MalformedURLException {
-        String path = "text/plain,hello+world";
-        String spec = "data:" + path;
-
-        URL url = DataURLs.create(spec);
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testCreateBase64MediaTypeNoParameters() throws MalformedURLException {
-        byte[] bytes = new byte[1024];
-        new Random().nextBytes(bytes);
-        String path = "application/octet-stream;base64," + Base64.getEncoder().encodeToString(bytes);
-        String spec = "data:" + path;
-
-        URL url = DataURLs.create(spec);
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testCreateInvalidBase64MediaTypeNoParameters() {
-        byte[] bytes = new byte[1024];
-        new Random().nextBytes(bytes);
-        String path = "application/octect-stream;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
-        String spec = "data:" + path;
-
-        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
-        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
-    }
-
-    @Test
-    void testCreateMediaTypeWithParameters() throws MalformedURLException {
-        String path = "text/plain;charset=UTF-8,hello+world";
-        String spec = "data:" + path;
-
-        URL url = DataURLs.create(spec);
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testCreateBase64MediaTypeWithParameters() throws MalformedURLException {
-        byte[] bytes = new byte[1024];
-        new Random().nextBytes(bytes);
-        String path = "application/octet-stream;charset=UTF-8;base64," + Base64.getEncoder().encodeToString(bytes);
-        String spec = "data:" + path;
-
-        URL url = DataURLs.create(spec);
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testCreateInvalidBase64MediaTypeWithParameters() {
-        byte[] bytes = new byte[1024];
-        new Random().nextBytes(bytes);
-        String path = "application/octect-stream;charset=UTF-8;base64," + Base64.getEncoder().encodeToString(bytes) + "%";
-        String spec = "data:" + path;
-
-        MalformedURLException exception = assertThrows(MalformedURLException.class, () -> DataURLs.create(spec));
-        assertThat(exception.getCause(), instanceOf(IllegalArgumentException.class));
-    }
-
-    @Test
-    void testBuilderFromStringBare() {
-        String data = "hello+world";
-        String path = "," + data;
-
-        URL url = DataURLs.builder(data)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStringWithMediaType() {
-        String mediaType = "application/json";
-        String data = "hello+world";
-        String path = mediaType + "," + data;
-
-        URL url = DataURLs.builder(data)
-                .withMediaType(mediaType)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStringWithMediaTypeAndParams() {
-        String mediaType = "application/json;charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        String data = "hello+world";
-        String path = mediaType + ";" + paramName + "=" + paramValue + "," + data;
-
-        URL url = DataURLs.builder(data)
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromReaderBare() {
-        String data = "hello+world";
-        String path = "," + data;
-
-        URL url = DataURLs.builder(new StringReader(data))
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromReaderWithMediaType() {
-        String mediaType = "application/json";
-        String data = "hello+world";
-        String path = mediaType + "," + data;
-
-        URL url = DataURLs.builder(new StringReader(data))
-                .withMediaType(mediaType)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromReaderWithMediaTypeAndParams() {
-        String mediaType = "application/json;charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        String data = "hello+world";
-        String path = mediaType + ";" + paramName + "=" + paramValue + "," + data;
-
-        URL url = DataURLs.builder(new StringReader(data))
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromBytesBase64Bare() {
-        byte[] data = new byte[1024];
-        new Random().nextBytes(data);
-        String path = ";base64," + Base64.getEncoder().encodeToString(data);
-
-        URL url = DataURLs.builder(data)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromBytesBase64WithMediaType() {
-        String mediaType = "application/json";
-        byte[] data = new byte[1024];
-        new Random().nextBytes(data);
-        String path = mediaType + ";base64," + Base64.getEncoder().encodeToString(data);
-
-        URL url = DataURLs.builder(data)
-                .withMediaType(mediaType)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromBytesBase64WithMediaTypeAndParams() {
-        String mediaType = "application/json;charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        byte[] data = new byte[1024];
-        new Random().nextBytes(data);
-        String path = mediaType + ";" + paramName + "=" + paramValue + ";base64," + Base64.getEncoder().encodeToString(data);
-
-        URL url = DataURLs.builder(data)
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromBytesNoBase64Bare() {
-        String data = "hello+world";
-        String path = "," + data;
-
-        URL url = DataURLs.builder(data.getBytes(StandardCharsets.US_ASCII))
-                .withBase64Data(false)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromBytesNoBase64WithMediaType() {
-        String mediaType = "application/json";
-        String data = "hello+world";
-        String path = mediaType + "," + data;
-
-        URL url = DataURLs.builder(data.getBytes(StandardCharsets.US_ASCII))
-                .withBase64Data(false)
-                .withMediaType(mediaType)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromBytesNoBase64WithMediaTypeAndParams() {
-        String mediaType = "application/json;charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        String data = "hello+world";
-        String path = mediaType + ";" + paramName + "=" + paramValue + "," + data;
-
-        URL url = DataURLs.builder(data.getBytes(StandardCharsets.US_ASCII))
-                .withBase64Data(false)
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStreamBase64Bare() {
-        byte[] data = new byte[1024];
-        new Random().nextBytes(data);
-        String path = ";base64," + Base64.getEncoder().encodeToString(data);
-
-        URL url = DataURLs.builder(new ByteArrayInputStream(data))
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStreamBase64WithMediaType() {
-        String mediaType = "application/json";
-        byte[] data = new byte[1024];
-        new Random().nextBytes(data);
-        String path = mediaType + ";base64," + Base64.getEncoder().encodeToString(data);
-
-        URL url = DataURLs.builder(new ByteArrayInputStream(data))
-                .withMediaType(mediaType)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStreamBase64WithMediaTypeAndParams() {
-        String mediaType = "application/json;charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        byte[] data = new byte[1024];
-        new Random().nextBytes(data);
-        String path = mediaType + ";" + paramName + "=" + paramValue + ";base64," + Base64.getEncoder().encodeToString(data);
-
-        URL url = DataURLs.builder(new ByteArrayInputStream(data))
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStreamNoBase64Bare() {
-        String data = "hello+world";
-        String path = "," + data;
-
-        URL url = DataURLs.builder(new ByteArrayInputStream(data.getBytes(StandardCharsets.US_ASCII)))
-                .withBase64Data(false)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStreamNoBase64WithMediaType() {
-        String mediaType = "application/json";
-        String data = "hello+world";
-        String path = mediaType + "," + data;
-
-        URL url = DataURLs.builder(new ByteArrayInputStream(data.getBytes(StandardCharsets.US_ASCII)))
-                .withBase64Data(false)
-                .withMediaType(mediaType)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderFromStreamNoBase64WithMediaTypeAndParams() {
-        String mediaType = "application/json;charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        String data = "hello+world";
-        String path = mediaType + ";" + paramName + "=" + paramValue + "," + data;
-
-        URL url = DataURLs.builder(new ByteArrayInputStream(data.getBytes(StandardCharsets.US_ASCII)))
-                .withBase64Data(false)
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderWithMediaTypeWithNullMediaTypeParameter() {
-        String bareMediaType = "application/json";
-        String mediaType = bareMediaType + ";charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        String data = "hello+world";
-        String path = bareMediaType + ";" + paramName + "=" + paramValue + "," + data;
-
-        URL url = DataURLs.builder(data)
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .withCharset(StandardCharsets.US_ASCII)
-                .withMediaTypeParameter("charset", null)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    @Test
-    void testBuilderWithMediaTypeWithCharset() {
-        String mediaType = "application/json;charset=UTF-8";
-        String paramName = "last-modified";
-        String paramValue = "0";
-        String data = "hello+world";
-        String path = mediaType.replace("UTF-8", "US-ASCII") + ";" + paramName + "=" + paramValue + "," + data;
-
-        URL url = DataURLs.builder(data)
-                .withMediaType(mediaType)
-                .withMediaTypeParameter(paramName, paramValue)
-                .withCharset(StandardCharsets.US_ASCII)
-                .build();
-
-        assertURL(url, path);
-    }
-
-    private void assertURL(URL url, String path) {
+    private void assertURL(URL url, String expectedPath) {
         assertEquals(Handler.PROTOCOL, url.getProtocol());
-        assertEquals(path, url.getPath());
-        assertEquals(path, url.getFile());
+        assertEquals(expectedPath, url.getPath());
+        assertEquals(expectedPath, url.getFile());
 
         assertNull(url.getQuery());
         assertNull(url.getUserInfo());
@@ -466,47 +568,64 @@ class DataURLsTest {
         assertNull(url.getRef());
     }
 
-    @Test
-    void testBase64AppenderWriteByte() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        StringBuilder expected = new StringBuilder();
-        try (OutputStream appender = new Base64Appender(sb)) {
-            for (byte b = 'A'; b <= 'Z'; b++) {
-                appender.write(b);
-                expected.append((char) b);
+    private void assertURLConnection(URL url, String expectedContentType, String expectedContent) {
+        assertURLConnection(url, expectedContentType, expectedContent.getBytes(StandardCharsets.UTF_8));
+    }
+
+    private void assertURLConnection(URL url, String expectedContentType, byte[] expectedContent) {
+        URLConnection connection = assertDoesNotThrow(() -> url.openConnection());
+        assertEquals(expectedContentType, connection.getContentType());
+        assertEquals(expectedContent.length, connection.getContentLength());
+
+        byte[] content = assertDoesNotThrow(() -> IOUtils.toByteArray(connection));
+        assertArrayEquals(expectedContent, content);
+    }
+
+    @Nested
+    class Base64AppenderTest {
+
+        @Test
+        void testWriteByte() throws IOException {
+            StringBuilder sb = new StringBuilder();
+            StringBuilder expected = new StringBuilder();
+            try (OutputStream appender = new Base64Appender(sb)) {
+                for (byte b = 'A'; b <= 'Z'; b++) {
+                    appender.write(b);
+                    expected.append((char) b);
+                }
             }
+            assertEquals(expected.toString(), sb.toString());
         }
-        assertEquals(expected.toString(), sb.toString());
-    }
 
-    @Test
-    void testBase64AppenderWriteArray() throws IOException {
-        StringBuilder sb = new StringBuilder();
-        StringBuilder expected = new StringBuilder();
-        try (OutputStream appender = new Base64Appender(sb)) {
-            // equal buffer sizes
-            byte[] buffer = new byte[1024];
-            fill(buffer, expected);
-            appender.write(buffer);
+        @Test
+        void testWriteArray() throws IOException {
+            StringBuilder sb = new StringBuilder();
+            StringBuilder expected = new StringBuilder();
+            try (OutputStream appender = new Base64Appender(sb)) {
+                // equal buffer sizes
+                byte[] buffer = new byte[1024];
+                fill(buffer, expected);
+                appender.write(buffer);
 
-            // smaller buffer size
-            buffer = new byte[512];
-            fill(buffer, expected);
-            appender.write(buffer);
+                // smaller buffer size
+                buffer = new byte[512];
+                fill(buffer, expected);
+                appender.write(buffer);
 
-            // larger buffer size
-            buffer = new byte[5632];
-            fill(buffer, expected);
-            appender.write(buffer);
+                // larger buffer size
+                buffer = new byte[5632];
+                fill(buffer, expected);
+                appender.write(buffer);
+            }
+            assertEquals(expected.toString(), sb.toString());
         }
-        assertEquals(expected.toString(), sb.toString());
-    }
 
-    private void fill(byte[] buffer, StringBuilder expected) {
-        for (int i = 0; i < buffer.length; i++) {
-            int c = RANDOM.nextInt(26) + 'A';
-            buffer[i] = (byte) c;
-            expected.append((char) c);
+        private void fill(byte[] buffer, StringBuilder expected) {
+            for (int i = 0; i < buffer.length; i++) {
+                int c = RANDOM.nextInt(26) + 'A';
+                buffer[i] = (byte) c;
+                expected.append((char) c);
+            }
         }
     }
 }

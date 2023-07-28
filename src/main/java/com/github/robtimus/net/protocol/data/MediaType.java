@@ -49,7 +49,7 @@ final class MediaType {
     }
 
     static MediaType create(String mimeType, Map<String, String> parameters) {
-        validateMimeType(mimeType, 0, mimeType.length());
+        validateMimeType(mimeType);
 
         String mediaTypeString = buildMediaTypeString(mimeType, parameters);
         return new MediaType(mediaTypeString, mimeType, new LinkedHashMap<>(parameters));
@@ -86,30 +86,33 @@ final class MediaType {
         }
     }
 
-    static MediaType parse(String type) {
-        return parse(type, 0, type.length());
+    static MediaType parse(String source, int start, int end) {
+        return parse(source.substring(start, end));
     }
 
-    static MediaType parse(String type, int start, int end) {
-        int index = type.indexOf(';', start);
-        if (isNotFound(index, end)) {
-            validateMimeType(type, start, end);
-            String mimeType = type.substring(start, end);
-            return new MediaType(mimeType, mimeType, Collections.emptyMap());
+    static MediaType parse(String type) {
+        int index = type.indexOf(';');
+        if (isNotFound(index)) {
+            validateMimeType(type);
+            return new MediaType(type, type, Collections.emptyMap());
         }
 
-        int mimeTypeStart = start;
+        int mimeTypeStart = 0;
         int mimeTypeEnd = index;
 
         validateMimeType(type, mimeTypeStart, mimeTypeEnd);
 
-        int paramStart = skipStartingWhitespace(type, index + 1, end);
-        int paramEnd = end;
+        int paramEnd = type.length();
+        int paramStart = skipStartingWhitespace(type, index + 1, paramEnd);
 
         Map<String, String> parameters = parseParameters(type, paramStart, paramEnd);
         String mimeType = type.substring(mimeTypeStart, mimeTypeEnd);
 
         return new MediaType(type, mimeType, parameters);
+    }
+
+    private static void validateMimeType(String mimeType) {
+        validateMimeType(mimeType, 0, mimeType.length());
     }
 
     private static void validateMimeType(String mimeType, int start, int end) {
@@ -197,8 +200,12 @@ final class MediaType {
         return Math.min(indexOfEquals, indexOfSemicolon);
     }
 
+    private static boolean isNotFound(int index) {
+        return index == -1;
+    }
+
     private static boolean isNotFound(int index, int end) {
-        return index == -1 || index >= end;
+        return isNotFound(index) || index >= end;
     }
 
     private static int skipStartingWhitespace(String s, int index, int end) {

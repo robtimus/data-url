@@ -44,7 +44,6 @@ public final class DataURLs {
     private static final Handler SHARED_HANDLER = new Handler();
 
     private DataURLs() {
-        throw new InternalError("cannot create instances of " + getClass().getName()); //$NON-NLS-1$
     }
 
     /**
@@ -122,15 +121,11 @@ public final class DataURLs {
         }
     }
 
-    private static void copyData(InputStream data, OutputStream dest) {
+    private static void copyData(InputStream data, OutputStream dest) throws IOException {
         byte[] buffer = new byte[4096];
         int len;
-        try {
-            while ((len = data.read(buffer)) != -1) {
-                dest.write(buffer, 0, len);
-            }
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
+        while ((len = data.read(buffer)) != -1) {
+            dest.write(buffer, 0, len);
         }
     }
 
