@@ -143,10 +143,7 @@ final class MediaType {
 
         int nameEnd = getNameEnd(paramString, start, end);
         String name = paramString.substring(start, nameEnd);
-        int valueStart = nameEnd;
-        if (valueStart < end && paramString.charAt(valueStart) == '=') {
-            valueStart++;
-        }
+        int valueStart = getValueStart(paramString, nameEnd, end);
 
         StringBuilder value = new StringBuilder(end - valueStart);
         for (int i = valueStart; i < end; i++) {
@@ -198,6 +195,14 @@ final class MediaType {
             return indexOfEquals;
         }
         return Math.min(indexOfEquals, indexOfSemicolon);
+    }
+
+    private static int getValueStart(String params, int start, int end) {
+        int valueStart = start;
+        if (valueStart < end && params.charAt(valueStart) == '=') {
+            valueStart++;
+        }
+        return valueStart;
     }
 
     private static boolean isNotFound(int index) {
