@@ -299,9 +299,8 @@ class HandlerTest {
     @Nested
     class ParseURL {
 
-        @SuppressWarnings("unused")
         @Test
-        void testNoDataProtocol() throws MalformedURLException {
+        void testNoDataProtocol() {
             Handler handler = spy(new Handler());
 
             String spec = "http://www.google.com/";
@@ -311,9 +310,8 @@ class HandlerTest {
             verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
         }
 
-        @SuppressWarnings("unused")
         @Test
-        void testCommaPresentInAnchor() throws MalformedURLException {
+        void testCommaPresentInAnchor() {
             Handler handler = spy(new Handler());
 
             String path = "hello+world";
@@ -325,9 +323,8 @@ class HandlerTest {
             verify(handler).parseURL(any(URL.class), eq(specWithAnchor), eq(5), eq(spec.length()));
         }
 
-        @SuppressWarnings("unused")
         @Test
-        void testNoCommaPresent() throws MalformedURLException {
+        void testNoCommaPresent() {
             Handler handler = spy(new Handler());
 
             String path = "hello+world";
@@ -338,9 +335,8 @@ class HandlerTest {
             verify(handler).parseURL(any(URL.class), eq(spec), eq(5), eq(spec.length()));
         }
 
-        @SuppressWarnings("unused")
         @Test
-        void testInvalidCharset() throws MalformedURLException {
+        void testInvalidCharset() {
             Handler handler = spy(new Handler());
 
             String path = "text/plain;charset=something+invalid,hello+world";
@@ -393,9 +389,8 @@ class HandlerTest {
             verify(handler).parseURL(url, spec, 5, spec.length());
         }
 
-        @SuppressWarnings("unused")
         @Test
-        void testInvalidBase64NoMediaType() throws MalformedURLException {
+        void testInvalidBase64NoMediaType() {
             Handler handler = spy(new Handler());
 
             byte[] bytes = new byte[1024];
@@ -436,9 +431,8 @@ class HandlerTest {
             verify(handler).parseURL(url, spec, 5, spec.length());
         }
 
-        @SuppressWarnings("unused")
         @Test
-        void testInvalidBase64MediaTypeNoParameters() throws MalformedURLException {
+        void testInvalidBase64MediaTypeNoParameters() {
             Handler handler = spy(new Handler());
 
             byte[] bytes = new byte[1024];
@@ -479,9 +473,8 @@ class HandlerTest {
             verify(handler).parseURL(url, spec, 5, spec.length());
         }
 
-        @SuppressWarnings("unused")
         @Test
-        void testInvalidBase64MediaTypeWithParameters() throws MalformedURLException {
+        void testInvalidBase64MediaTypeWithParameters() {
             Handler handler = spy(new Handler());
 
             byte[] bytes = new byte[1024];
