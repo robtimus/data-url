@@ -62,7 +62,7 @@
   </issueManagement>
 
   <properties>
-    <version.commons-io>2.13.0</version.commons-io>
+    <version.commons-io>2.14.0</version.commons-io>
   </properties>
 
   <dependencies>
