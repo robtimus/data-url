@@ -289,7 +289,7 @@ class DataURLsTest {
         }
 
         void testIOException() {
-            IOException cause = new IOException();
+            Throwable cause = new IOException();
 
             @SuppressWarnings("resource")
             Reader data = new BrokenReader(cause);
@@ -498,7 +498,7 @@ class DataURLsTest {
         @ParameterizedTest(name = "base64: {0}")
         @ValueSource(booleans = { true, false })
         void testIOException(boolean base64) {
-            IOException cause = new IOException();
+            Throwable cause = new IOException();
 
             @SuppressWarnings("resource")
             InputStream data = new BrokenInputStream(cause);
