@@ -125,7 +125,7 @@ class DataURLConnectionTest {
         DataURLConnection connection = new DataURLConnection(testURL, MediaType.DEFAULT, data);
         connection.setDoInput(false);
 
-        assertThrows(ProtocolException.class, () -> connection.getInputStream());
+        assertThrows(ProtocolException.class, connection::getInputStream);
     }
 
     @Test
