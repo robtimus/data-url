@@ -15,6 +15,9 @@
  * limitations under the License.
  */
 
+/**
+ * Support for data URLs as specified in <a href="https://www.ietf.org/rfc/rfc2397.txt">RFC 2397</a>.
+ */
 module com.github.robtimus.data.url {
     exports com.github.robtimus.net.protocol.data;
 }
