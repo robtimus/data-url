@@ -64,7 +64,7 @@
   <properties>
     <version.java>11</version.java>
 
-    <version.commons-io>2.21.0</version.commons-io>
+    <version.commons-io>2.22.0</version.commons-io>
   </properties>
 
   <dependencies>
